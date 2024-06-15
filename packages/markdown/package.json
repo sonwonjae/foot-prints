@@ -1,0 +1,24 @@
+{
+    "name": "@foot-prints/markdown",
+    "version": "0.0.0",
+    "private": true,
+    "exports": {
+      ".": "./src/index.ts"
+    },
+    "scripts": {
+      "lint": "eslint . --max-warnings 0",
+      "generate:component": "turbo gen react-component"
+    },
+    "devDependencies": {
+      "@repo/eslint-config": "*",
+      "@repo/typescript-config": "*",
+      "@types/node": "^20",
+      "@types/eslint": "^8",
+      "@types/react": "^18",
+      "@types/react-dom": "^18",
+      "eslint": "^8",
+      "react": "^18",
+      "typescript": "^5"
+    }
+  }
+  
