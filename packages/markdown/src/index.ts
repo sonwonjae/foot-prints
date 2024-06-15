@@ -1,5 +1,1 @@
-function Markdown() {
-    return 'markdown'
-}
-
-export default Markdown
+export { default as Markdown } from './Markdown';

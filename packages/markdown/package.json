@@ -3,22 +3,33 @@
     "version": "0.0.0",
     "private": true,
     "exports": {
-      ".": "./src/index.ts"
+        "./styles.css": "./dist/index.css",
+        ".": "./src/index.ts"
     },
+    "sideEffects": [
+        "**/*.css"
+    ],
     "scripts": {
-      "lint": "eslint . --max-warnings 0",
-      "generate:component": "turbo gen react-component"
+        "lint": "eslint . --max-warnings 0",
+        "generate:component": "turbo gen react-component",
+        "dev": "tailwindcss -i ./src/styles.css -o ./dist/index.css --watch"
     },
     "devDependencies": {
-      "@repo/eslint-config": "*",
-      "@repo/typescript-config": "*",
-      "@types/node": "^20",
-      "@types/eslint": "^8",
-      "@types/react": "^18",
-      "@types/react-dom": "^18",
-      "eslint": "^8",
-      "react": "^18",
-      "typescript": "^5"
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "@types/eslint": "^8",
+        "@types/node": "^20",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "eslint": "^8",
+        "react": "^18",
+        "tailwindcss": "^3.4.1",
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "clsx": "^2.1.1",
+        "highlight.js": "^11.9.0",
+        "postcss": "^8",
+        "tailwind-merge": "^2.3.0"
     }
-  }
-  
+}
