@@ -73,6 +73,7 @@ module.exports = {
 				pathGroupsExcludedImportTypes: ['type'],
 			},
 		],
+		// 'import/no-relative-parent-imports': 'error',
 	},
 	ignorePatterns: [
 		// Ignore dotfiles
