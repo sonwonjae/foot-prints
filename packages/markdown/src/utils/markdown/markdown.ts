@@ -1,5 +1,5 @@
-import { getMarkdownSelectionStartWithMarkdownList } from "./selection";
-import { MarkdownType } from "./types";
+import { getMarkdownSelectionStartWithMarkdownList } from './selection';
+import { MarkdownType } from './types';
 
 export const parseValueToMarkdownList = (value: string) => {
 	return value.split('\n');
@@ -106,7 +106,7 @@ export const splitMarkdownOfSyntax = (markdown: string) => {
 			text: markdown,
 		};
 	}
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line no-unused-vars
 	const [_, syntax = '', text = ''] = markdown.split(REGEXP);
 
 	return {

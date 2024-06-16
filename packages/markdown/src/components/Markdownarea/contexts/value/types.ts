@@ -10,10 +10,10 @@ export interface ChangeValueParam {
 }
 
 export interface ChangeValue {
-    (param?: ChangeValueParam): void
+	(param?: ChangeValueParam): void;
 }
 
 export interface MarkdownareaValueContextValue {
-	markdownareaRef: RefObject<HTMLTextAreaElement>
-    onChange: ComponentProps<'textarea'>['onChange'];
+	markdownareaRef: RefObject<HTMLTextAreaElement>;
+	onChange: ComponentProps<'textarea'>['onChange'];
 }

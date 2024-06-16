@@ -5,4 +5,5 @@ export const STYLED_SYNTAX_MAP = {
 	code: '`',
 	highlight: '==',
 } as const;
+
 export type StyledTextType = keyof typeof STYLED_SYNTAX_MAP;

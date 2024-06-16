@@ -1,1 +1,1 @@
-export { default as Markdownarea } from './Markdownarea/Markdownarea'
+export { default as Markdownarea } from './Markdownarea/Markdownarea';

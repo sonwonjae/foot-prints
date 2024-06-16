@@ -1,8 +1,10 @@
+import type { MarkdownareaKeymapContextValue } from './types';
+import type { PropsWithChildren } from 'react';
+
 import { createContext, useContext, useMemo } from 'react';
 
-import { useMarkdownareaPropsContext } from '@/components/Markdownarea/contexts/props';
 import { useMarkdownareaHistoryContext } from '@/components/Markdownarea/contexts/history';
-
+import { useMarkdownareaPropsContext } from '@/components/Markdownarea/contexts/props';
 import {
 	getIsEmptyMarkdown,
 	getMarkdownTabCount,
@@ -16,29 +18,29 @@ import { getMarkdownSelectionStartWithMarkdownList } from '@/utils/markdown/sele
 
 import { makeChangeValueUtil } from './utils/changeValue';
 
-import type { PropsWithChildren } from 'react';
-import type { MarkdownareaKeymapContextValue } from './types';
-
-const MarkdownareaKeymapContext = createContext<MarkdownareaKeymapContextValue>({
-    onKeyDown: () => {},
-})
+const MarkdownareaKeymapContext = createContext<MarkdownareaKeymapContextValue>(
+	{
+		onKeyDown: () => {},
+	},
+);
 
 export const useMarkdownareaKeymapContext = () => {
-    return useContext(MarkdownareaKeymapContext)
-}
+	return useContext(MarkdownareaKeymapContext);
+};
 
 export function MarkdownareaKeymapProvider({ children }: PropsWithChildren) {
-    const { value, onKeyDownInherit } = useMarkdownareaPropsContext();
-    const { recordHistory, undo, redo } = useMarkdownareaHistoryContext();
+	const { value, onKeyDownInherit } = useMarkdownareaPropsContext();
+	const { recordHistory, undo, redo } = useMarkdownareaHistoryContext();
 
-    const onKeyDown: MarkdownareaKeymapContextValue['onKeyDown'] = (e) => {
+	const onKeyDown: MarkdownareaKeymapContextValue['onKeyDown'] = (e) => {
 		const key = e.key.toLocaleUpperCase();
-        const { changeSelectionRange, toggleSelectionRange } = makeChangeValueUtil({
-			e,
-			onKeyDownInherit,
-			recordHistory,
-			value,
-		});
+		const { changeSelectionRange, toggleSelectionRange } =
+			makeChangeValueUtil({
+				e,
+				onKeyDownInherit,
+				recordHistory,
+				value,
+			});
 
 		/** NOTE: enter key event */
 		if (key === 'ENTER') {
@@ -469,15 +471,15 @@ export function MarkdownareaKeymapProvider({ children }: PropsWithChildren) {
 			undo(e);
 			return;
 		}
-    }
+	};
 
-    const contextValue = useMemo(() => {
-        return { onKeyDown }
-    }, [onKeyDown])
+	const contextValue = useMemo(() => {
+		return { onKeyDown };
+	}, [onKeyDown]);
 
-    return (
-        <MarkdownareaKeymapContext.Provider value={contextValue}>
-            {children}
-        </MarkdownareaKeymapContext.Provider>
-    )
+	return (
+		<MarkdownareaKeymapContext.Provider value={contextValue}>
+			{children}
+		</MarkdownareaKeymapContext.Provider>
+	);
 }

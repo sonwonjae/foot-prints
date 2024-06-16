@@ -1,6 +1,11 @@
-import { STYLED_SYNTAX_MAP, StyledTextType } from "@/constants";
+import { STYLED_SYNTAX_MAP, StyledTextType } from '@/constants';
 
-import { getMarkdownTabCount, parseToPureMarkdown, parseTabCountToTab, splitMarkdownOfSyntax } from "./markdown";
+import {
+	getMarkdownTabCount,
+	parseToPureMarkdown,
+	parseTabCountToTab,
+	splitMarkdownOfSyntax,
+} from './markdown';
 
 export const makeStyledTextConfig = (styledSyntax: string) => {
 	const escapedStyledSyntax = styledSyntax.replace(

@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps } from 'react';
 
 declare global {
 	/** NOTE: textarea change event에 e.nativeEvent.isComposing boolean 값이 있는데 없다고 선언되어 있어서 강제로 덮어씀 */
@@ -7,7 +7,7 @@ declare global {
 	}
 }
 export interface MarkdownareaKeymapContextValue {
-    onKeyDown: ComponentProps<'textarea'>['onKeyDown'];
+	onKeyDown: ComponentProps<'textarea'>['onKeyDown'];
 }
 
 export type ReplaceSelectionMarkdownType =

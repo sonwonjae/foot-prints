@@ -1,3 +1,3 @@
-import { getMarkdownType } from "./markdown";
+import { getMarkdownType } from './markdown';
 
 export type MarkdownType = ReturnType<typeof getMarkdownType>;
