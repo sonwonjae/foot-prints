@@ -17,6 +17,7 @@
     "devDependencies": {
         "@foot-prints/eslint-config": "*",
         "@foot-prints/typescript-config": "*",
+        "@foot-prints/tailwind-config": "*",
         "@types/eslint": "^8",
         "@types/node": "^20",
         "@types/react": "^18",

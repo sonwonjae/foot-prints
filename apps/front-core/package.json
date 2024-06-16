@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "typescript": "^5",
+    "@foot-prints/tailwind-config": "*",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -1,0 +1,12 @@
+{
+    "name": "@foot-prints/tailwind-config",
+    "version": "0.0.0",
+    "private": true,
+    "exports": {
+      ".": "./tailwind.config.ts"
+    },
+    "devDependencies": {
+      "@foot-prints/typescript-config": "*",
+      "tailwindcss": "^3.4.1"
+    }
+  }
