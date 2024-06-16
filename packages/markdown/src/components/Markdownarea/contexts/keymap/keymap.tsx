@@ -1,35 +1,41 @@
 import { createContext, useContext, useMemo } from 'react';
 
-import { useMarkdown } from '@/contexts/Markdown.context';
+import { useMarkdownareaValueContext } from '@/components/Markdownarea/contexts/value';
+import { useMarkdownareaPropsContext } from '@/components/Markdownarea/contexts/props';
+import { useMarkdownareaHistoryContext } from '@/components/Markdownarea/contexts/history';
+
 import {
 	getIsEmptyMarkdown,
-	getMarkdownSelectionStartWithMarkdownList,
 	getMarkdownTabCount,
 	getMarkdownType,
 	parseTabCountToTab,
 	parseToPureMarkdown,
 	parseValueToMarkdownList,
 	splitMarkdownOfSyntax,
-} from '@/utils/parse';
+} from '@/utils/markdown';
+import { getMarkdownSelectionStartWithMarkdownList } from '@/utils/markdown/selection';
 
-import type { KeyMapContextValue } from '@/types';
-import type { KeyboardEvent, PropsWithChildren } from 'react';
+import { makeChangeValueUtil } from './utils/changeValue';
 
-const KeyMapContext = createContext<KeyMapContextValue>({
-	setKeyMap: () => {},
-});
+import type { PropsWithChildren } from 'react';
+import type { MarkdownareaKeymapContextValue } from './types';
 
-export const useKeyMap = () => {
-	return useContext(KeyMapContext);
-};
+const MarkdownareaKeymapContext = createContext<MarkdownareaKeymapContextValue>({
+    onKeyDown: () => {},
+})
 
-export function KeyMapProvider({ children }: PropsWithChildren) {
-	const { makeChangeValueInOnKeyDown, undo, redo } = useMarkdown();
+export const useMarkdownareaKeymapContext = () => {
+    return useContext(MarkdownareaKeymapContext)
+}
 
-	const setKeyMap = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+export function MarkdownareaKeymapProvider({ children }: PropsWithChildren) {
+    const { value } = useMarkdownareaPropsContext();
+    const { makeChangeValue } = useMarkdownareaValueContext();
+    const { undo, redo } = useMarkdownareaHistoryContext();
+
+    const onKeyDown: MarkdownareaKeymapContextValue['onKeyDown'] = (e) => {
 		const key = e.key.toLocaleUpperCase();
-		const { changeSelectionRange, toggleSelectionRange } =
-			makeChangeValueInOnKeyDown(e);
+        const { changeSelectionRange, toggleSelectionRange } = makeChangeValueUtil({ e, makeChangeValue, value })
 
 		/** NOTE: enter key event */
 		if (key === 'ENTER') {
@@ -402,7 +408,6 @@ export function KeyMapProvider({ children }: PropsWithChildren) {
 			});
 			return;
 		}
-
 		/** NOTE: wrap - *, ~, = */
 		if (key === '*' || key === '~' || key === '=') {
 			changeSelectionRange({
@@ -461,15 +466,15 @@ export function KeyMapProvider({ children }: PropsWithChildren) {
 			undo(e);
 			return;
 		}
-	};
+    }
 
-	const contextValue = useMemo(() => {
-		return { setKeyMap };
-	}, [undo, redo]);
+    const contextValue = useMemo(() => {
+        return { onKeyDown }
+    }, [onKeyDown])
 
-	return (
-		<KeyMapContext.Provider value={contextValue}>
-			{children}
-		</KeyMapContext.Provider>
-	);
+    return (
+        <MarkdownareaKeymapContext.Provider value={contextValue}>
+            {children}
+        </MarkdownareaKeymapContext.Provider>
+    )
 }

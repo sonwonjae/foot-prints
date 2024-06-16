@@ -1,1 +1,1 @@
-export { default as Markdown } from './Markdown';
+export * from './components';
