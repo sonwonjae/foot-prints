@@ -1,5 +1,5 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
+  "extends": "@foot-prints/typescript-config/react-library.json",
   "compilerOptions": {
     "paths": { "@/*": ["./src/*"] },
     "outDir": "dist"
