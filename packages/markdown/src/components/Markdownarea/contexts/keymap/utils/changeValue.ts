@@ -1,13 +1,15 @@
-import { ChangeValue, MakeChangeValue } from "@/components/Markdownarea/contexts/value/types";
+import { ChangeValue } from "@/components/Markdownarea/contexts/value/types";
 import { ChangeSelectionRange, GapType, ReplaceSelectionMarkdown } from "@/components/Markdownarea/contexts/keymap/types";
 import { StyledTextType } from "@/constants";
 
 import { getMarkdownSelectionStartWithMarkdownList } from "@/utils/markdown/selection";
 import { toggleStyledText } from "@/utils/markdown/styledText";
 
-import { parseMarkdownListToValue, parseValueToMarkdownList } from "@/utils/markdown";
+import { parseMarkdownListToValue, parseValueToMarkdownList, reorderOli } from "@/utils/markdown";
 
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import { MarkdownareaPropsContextValue } from "../../props/types";
+import { RecordHistory } from "../../history/types";
 
 const getMarkdownIndexMap = (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
     /** NOTE: get markdown selectRange index */
@@ -411,22 +413,45 @@ export const makeChangeValueParam = ({
 
 export const makeChangeValueUtil = ({
     e,
-    makeChangeValue,
+    onKeyDownInherit,
+    recordHistory,
     value,
 }:
 {
     e: ReactKeyboardEvent<HTMLTextAreaElement>;
-    makeChangeValue: MakeChangeValue;
+    onKeyDownInherit: MarkdownareaPropsContextValue['onKeyDownInherit'];
+    recordHistory: RecordHistory;
     value: string;
 }) => {
 
-    const changeValue: ChangeValue = (changeValueParam) => {
+    const changeValue: ChangeValue = ({
+        newValue = e.currentTarget.value,
+        nextSelectionStart = e.currentTarget.selectionStart,
+        nextSelectionEnd,
+    } = {}) => {
         e.preventDefault();
         if (e.nativeEvent.isComposing) {
             return;
         }
-        const changeValue = makeChangeValue(e);
-        changeValue(changeValueParam);
+        
+        const { reorderdValue, nextSelectionStart: finalSelectionStart } =
+            reorderOli({
+                value: newValue,
+                selectionStart: nextSelectionStart,
+            });
+
+        e.currentTarget.value = reorderdValue;
+        e.currentTarget.setSelectionRange(
+            finalSelectionStart,
+            nextSelectionEnd ?? finalSelectionStart,
+        );
+        onKeyDownInherit?.(e);
+    
+        recordHistory({
+            value: reorderdValue,
+            selectionStart: finalSelectionStart,
+            selectionEnd: nextSelectionEnd ?? finalSelectionStart,
+        })
     };
 
     const changeSelectionRange: ChangeSelectionRange = ({

@@ -1,6 +1,5 @@
 import { createContext, useContext, useMemo } from 'react';
 
-import { useMarkdownareaValueContext } from '@/components/Markdownarea/contexts/value';
 import { useMarkdownareaPropsContext } from '@/components/Markdownarea/contexts/props';
 import { useMarkdownareaHistoryContext } from '@/components/Markdownarea/contexts/history';
 
@@ -29,13 +28,17 @@ export const useMarkdownareaKeymapContext = () => {
 }
 
 export function MarkdownareaKeymapProvider({ children }: PropsWithChildren) {
-    const { value } = useMarkdownareaPropsContext();
-    const { makeChangeValue } = useMarkdownareaValueContext();
-    const { undo, redo } = useMarkdownareaHistoryContext();
+    const { value, onKeyDownInherit } = useMarkdownareaPropsContext();
+    const { recordHistory, undo, redo } = useMarkdownareaHistoryContext();
 
     const onKeyDown: MarkdownareaKeymapContextValue['onKeyDown'] = (e) => {
 		const key = e.key.toLocaleUpperCase();
-        const { changeSelectionRange, toggleSelectionRange } = makeChangeValueUtil({ e, makeChangeValue, value })
+        const { changeSelectionRange, toggleSelectionRange } = makeChangeValueUtil({
+			e,
+			onKeyDownInherit,
+			recordHistory,
+			value,
+		});
 
 		/** NOTE: enter key event */
 		if (key === 'ENTER') {

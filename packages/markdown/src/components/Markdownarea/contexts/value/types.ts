@@ -1,4 +1,4 @@
-import type { ComponentProps, KeyboardEvent as ReactKeyboardEvent, ChangeEvent as ReactChangeEvent } from 'react';
+import type { ComponentProps, RefObject } from 'react';
 
 export interface ChangeValueParam {
 	/** 새롭게 적용할 value [=e.currentTarget.value] */
@@ -13,12 +13,7 @@ export interface ChangeValue {
     (param?: ChangeValueParam): void
 }
 
-export interface MakeChangeValue {
-    (e: ReactKeyboardEvent<HTMLTextAreaElement>): ChangeValue;
-    (e: ReactChangeEvent<HTMLTextAreaElement>): ChangeValue;
-}
-
 export interface MarkdownareaValueContextValue {
-    makeChangeValue: MakeChangeValue;
+	markdownareaRef: RefObject<HTMLTextAreaElement>
     onChange: ComponentProps<'textarea'>['onChange'];
 }

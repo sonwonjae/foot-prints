@@ -21,7 +21,7 @@ export const useMarkdownareaHistoryContext = () => {
 };
 
 export function MarkdownareaHistoryProvider({ children }: PropsWithChildren) {
-    const { value, setValue } = useMarkdownareaPropsContext();
+    const { value, onKeyDownInherit } = useMarkdownareaPropsContext();
 
 	const [undoHistoryStack, setUndoHistoryStack] = useState<MarkdownareaHitories>([{ value: String(value), selectionStart: 0, selectionEnd: 0 }]);
     const [redoHistoryStack, setRedoHistoryStack] = useState<MarkdownareaHitories>([]);
@@ -50,9 +50,6 @@ export function MarkdownareaHistoryProvider({ children }: PropsWithChildren) {
 			setUndoHistoryStack(newUndoHistoryStack);
 			setRedoHistoryStack(newRedoHistoryStack);
 
-			setValue(
-				newUndoHistoryStack[newUndoHistoryStack.length - 1]!.value,
-			);
 			e.currentTarget.value =
 				newUndoHistoryStack[newUndoHistoryStack.length - 1]!.value ?? '';
 			e.currentTarget.setSelectionRange(
@@ -61,6 +58,7 @@ export function MarkdownareaHistoryProvider({ children }: PropsWithChildren) {
 				newUndoHistoryStack[newUndoHistoryStack.length - 1]!
 					.selectionEnd,
 			);
+			onKeyDownInherit?.(e);
 		}
 	};
 
@@ -76,12 +74,13 @@ export function MarkdownareaHistoryProvider({ children }: PropsWithChildren) {
 			setRedoHistoryStack(newRedoHistoryStack);
 			setUndoHistoryStack(newUndoHistoryStack);
 
-			setValue(redoedValueInfo.value);
 			e.currentTarget.value = redoedValueInfo.value;
 			e.currentTarget.setSelectionRange(
 				redoedValueInfo.selectionStart,
 				redoedValueInfo.selectionEnd,
 			);
+
+			onKeyDownInherit?.(e);
 		}
 	};
 

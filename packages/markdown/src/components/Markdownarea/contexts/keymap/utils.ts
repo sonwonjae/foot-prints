@@ -1,4 +1,4 @@
-import { ChangeValue, MakeChangeValue } from "@/components/Markdownarea/contexts/value/types";
+import { ChangeValue } from "@/components/Markdownarea/contexts/value/types";
 import { StyledTextType } from "@/constants";
 
 import { getMarkdownSelectionStartWithMarkdownList } from "@/utils/markdown/selection";

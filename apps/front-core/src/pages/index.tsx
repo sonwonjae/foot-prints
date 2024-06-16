@@ -12,7 +12,18 @@ export default function Home() {
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
     >
-      <Markdownarea value={text} setValue={setText} />
+      <Markdownarea
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+        }}
+        onKeyDown={(e) => {
+          setText(e.currentTarget.value);
+        }}
+        />
+      <input className="text-black h-full w-full" value={text} onChange={(e) => {
+        setText(e.target.value)
+      }} />
     </main>
   );
 }

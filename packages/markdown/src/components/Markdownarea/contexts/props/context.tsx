@@ -3,14 +3,15 @@ import { MarkdownareaPropsProviderProps, MarkdownareaPropsContextValue } from '.
 
 const MarkdownareaPropsContext = createContext<MarkdownareaPropsContextValue>({
     value: '',
-    setValue: () => {},
+    onChangeInherit: () => {},
+    onKeyDownInherit: () => {},
 })
 
 export const useMarkdownareaPropsContext = () => {
     return useContext(MarkdownareaPropsContext)
 }
 
-export function MarkdownareaPropsProvider({ children, onChange = () => {}, onKeyDown = () => {}, ...props }: MarkdownareaPropsProviderProps) {
+export function MarkdownareaPropsProvider({ children, onChange, onKeyDown, ...props }: MarkdownareaPropsProviderProps) {
 
     const contextValue = useMemo(() => {
         return {
