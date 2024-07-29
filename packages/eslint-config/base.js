@@ -4,7 +4,12 @@ const project = resolve(process.cwd(), 'tsconfig.json');
 
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
-	extends: ['eslint:recommended', 'turbo', 'plugin:prettier/recommended'],
+	extends: [
+		'eslint:recommended',
+		'turbo',
+		'plugin:prettier/recommended',
+		'plugin:@typescript-eslint/recommended',
+	],
 	plugins: ['@typescript-eslint', 'import'],
 	globals: {
 		React: true,
@@ -18,6 +23,8 @@ module.exports = {
 		},
 	},
 	rules: {
+		'no-undef': 'off', // no-undef 규칙을 끕니다.
+		'@typescript-eslint/no-unused-vars': 'warn',
 		'arrow-body-style': ['error', 'always'], // 화살표 함수라도 항상 함수 바디가 있도록 강제함
 		'consistent-return': 'off', // 모든 함수에 꼭 return이 없어도 되도록 허용
 		'no-tabs': 'off',

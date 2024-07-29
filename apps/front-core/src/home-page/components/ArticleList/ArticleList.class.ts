@@ -4,8 +4,16 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { convertStringToHexColor, darker } from "@/three/utils/color";
 import { createCylinder } from "@/three/utils/cylinder";
 
-import { AROUND_DIRECT } from "./Canvas.constants";
-import { Cylinder, Nullable, CheckMap, CategoryMap } from "./Canvas.type";
+import { AROUND_DIRECT } from "./ArticleList.constants";
+import {
+  Cylinder,
+  CylinderMapStore,
+  DefaultCylinderType,
+  OnCylinderClick,
+  CylinderMapConstructorParam,
+  UpdateCylinderMapParam,
+  UpdateCategoryMapParam,
+} from "./ArticleList.type";
 import {
   createRenderer,
   dispatchCylinderMouseEvent,
@@ -16,45 +24,10 @@ import {
   initLight,
   resize,
   updateMouseStyle,
-} from "./Canvas.utils";
+} from "./ArticleList.utils";
 
-declare global {
-  interface GlobalEventHandlersEventMap {
-    "cylinder-enter": CustomEvent<{ cylinder: Cylinder }>;
-    "cylinder-out": CustomEvent<{ cylinder: Cylinder }>;
-  }
-}
-
-interface CylinderMapStore {
-  currentSelectedCylinder: Nullable<Cylinder>;
-  currentCategory: Nullable<string>;
-  prevHoveredCylinder: Nullable<Cylinder>;
-  map: CheckMap;
-  categoryMap: CategoryMap;
-  targetCylinderLocation: Nullable<{
-    x: number;
-    z: number;
-    progress: number;
-    cameraStartLocation: { x: number; z: number };
-    controlsStartLocation: { x: number; z: number };
-  }>;
-}
-
-interface CylinderMapConstructorParam<CylinderType> {
-  $canvas: HTMLCanvasElement;
-  cylinderList: Array<CylinderType>;
-  bx?: number;
-  bz?: number;
-}
-
-interface DefaultCylinderTyp {
-  location: { x: number; z: number };
-  category?: string;
-  height: number;
-}
-
-export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
-  /** CylinderMap instance state */
+export class CylinderMap<CylinderType extends DefaultCylinderType> {
+  /** NOTE: CylinderMap instance state */
   #store: CylinderMapStore = {
     currentSelectedCylinder: null,
     currentCategory: null,
@@ -64,40 +37,44 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     targetCylinderLocation: null,
   };
 
-  /** canvas element */
+  /** NOTE: canvas element */
   $canvas: HTMLCanvasElement;
 
   cylinderList: Array<CylinderType>;
 
-  /** THREE WebGLRenderer */
+  /** NOTE: THREE WebGLRenderer */
   #renderer: THREE.WebGLRenderer;
 
-  /** THREE PerspectiveCamera */
+  /** NOTE: THREE PerspectiveCamera */
   #camera: THREE.PerspectiveCamera;
 
-  /** OrbitControls */
+  /** NOTE: OrbitControls */
   #controls: OrbitControls;
 
-  /** THREE Scene */
+  /** NOTE: THREE Scene */
   #scene: THREE.Scene;
 
-  /** THREE Raycaster */
+  /** NOTE: THREE Raycaster */
   #raycaster: THREE.Raycaster;
 
-  /** THREE Raycaster */
+  /** NOTE: THREE Raycaster */
   #pointer: THREE.Vector2;
 
-  /** base x 좌표 */
+  /** NOTE: base x 좌표 */
   #bx: number = 0;
 
-  /** base z 좌표 */
+  /** NOTE: base z 좌표 */
   #bz: number = 0;
+
+  /** NOTE: cylinder click event handler */
+  #onCylinderClick?: OnCylinderClick;
 
   constructor({
     $canvas,
     cylinderList,
     bx,
     bz,
+    onCylinderClick,
   }: CylinderMapConstructorParam<CylinderType>) {
     /** NOTE: bind method this */
     this.updateState = this.updateState.bind(this);
@@ -124,6 +101,9 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     this.#bx = bx ?? 0;
     this.#bz = bz ?? 0;
 
+    /** NOTE: bind constructor param in property */
+    this.#onCylinderClick = onCylinderClick;
+
     /** NOTE: create renderer */
     this.#renderer = createRenderer({ $canvas: this.$canvas });
 
@@ -138,56 +118,57 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
 
     /** NOTE: create scene * set scene in camera */
     this.#scene = new THREE.Scene();
+    // this.#scene.fog = new THREE.FogExp2("#FFFFFF", 0.02);
+    this.#scene.background = new THREE.Color("#FFFFFF");
     this.#camera.lookAt(this.#scene.position);
 
     /** NOTE: create light * set light in scene */
     initLight({ scene: this.#scene });
 
-    /** create raycaster & pointer */
+    /** NOTE: create raycaster & pointer */
     this.#raycaster = new THREE.Raycaster();
     this.#pointer = new THREE.Vector2();
 
-    /** create fill cylinder list */
+    /** NOTE: create fill cylinder list */
     cylinderList.forEach(
       ({ location = { x: 0, z: 0 }, category = "", height }) => {
         const { x, z } = location;
-        const nx = this.#bx + x;
-        const nz = this.#bz + z;
-        const color = convertStringToHexColor(category);
+        const color = convertStringToHexColor(category ?? "");
         const minHeight = 0.4;
         const maxHeight = 3;
-        const limitedHeight = Math.min(maxHeight, Math.max(minHeight, height));
+        const limitedHeight = Math.min(
+          maxHeight,
+          Math.max(minHeight, height ?? 0),
+        );
 
         const cylinder = createCylinder(this.#scene, {
-          x: nx,
-          z: nz,
+          x,
+          z,
           color,
           height: limitedHeight,
         });
 
         this.updateCylinderMap({
           cylinder,
-          x: nx,
-          z: nz,
+          x,
+          z,
           color,
           category,
         });
         this.updateCategoryMap({
           cylinder,
-          category,
-          x: nx,
-          z: nz,
+          category: category ?? "",
+          x,
+          z,
           height: limitedHeight,
         });
       },
     );
 
-    /** create empty cylinder list */
+    /** NOTE: create empty cylinder list */
     cylinderList.forEach(({ location = { x: 0, z: 0 } }) => {
       const { x, z } = location;
-      const nx = this.#bx + x;
-      const nz = this.#bz + z;
-      this.createEmptyCylinderAround({ x: nx, z: nz, length: 2 });
+      this.createEmptyCylinderAround({ x, z, length: 2 });
     });
 
     /** NOTE: set init target cylinder location  */
@@ -197,7 +178,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     });
   }
 
-  /** store에 존재하는 state를 업데이트하는 메서드 */
+  /** NOTE: store에 존재하는 state를 업데이트하는 메서드 */
   updateState(newState: Partial<CylinderMapStore>) {
     this.#store = {
       ...this.#store,
@@ -205,20 +186,14 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     };
   }
 
-  /** store에 존재하는 state 중 map의 특정 좌표에 cylinder를 업데이트하는 메서드 */
+  /** NOTE: store에 존재하는 state 중 map의 특정 좌표에 cylinder를 업데이트하는 메서드 */
   updateCylinderMap({
     cylinder,
     x,
     z,
     color,
     category,
-  }: {
-    cylinder: Cylinder;
-    x: number;
-    z: number;
-    color: `#${string}`;
-    category?: string;
-  }) {
+  }: UpdateCylinderMapParam) {
     const { map } = this.#store;
 
     if (!map[x]) {
@@ -234,20 +209,14 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     }
   }
 
-  /** store에 존재하는 state 중 category map의 특정 category에 cylinder를 업데이트하는 메서드 */
+  /** NOTE: store에 존재하는 state 중 category map의 특정 category에 cylinder를 업데이트하는 메서드 */
   updateCategoryMap({
     category,
     x,
     z,
     height,
     cylinder,
-  }: {
-    category: string;
-    x: number;
-    z: number;
-    height: number;
-    cylinder: Cylinder;
-  }) {
+  }: UpdateCategoryMapParam) {
     const { categoryMap } = this.#store;
     if (!categoryMap[category]) {
       categoryMap[category] = [];
@@ -308,7 +277,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     });
   }
 
-  /** 파라미터로 전달받은 x, z 좌표에 empty cylinder 하나 만드는 method */
+  /** NOTE: 파라미터로 전달받은 x, z 좌표에 empty cylinder 하나 만드는 method */
   createEmptyCylinder({ x, z }: { x: number; z: number }) {
     const { map } = this.#store;
 
@@ -331,7 +300,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     }
   }
 
-  /** 파라미터로 전달받은 x, z 좌표 주변에 empty cylinder list를 만드는 method */
+  /** NOTE: 파라미터로 전달받은 x, z 좌표 주변에 empty cylinder list를 만드는 method */
   createEmptyCylinderAround({
     x,
     z,
@@ -343,6 +312,10 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
   }) {
     AROUND_DIRECT.forEach(([dx, dz]) => {
       const [nx, nz] = [x + dx, z + dz];
+
+      if (nx < 0 || nz < 0) {
+        return;
+      }
 
       this.createEmptyCylinder({
         x: nx,
@@ -365,7 +338,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     /** NOTE: cylinder에 hover했을때 같은 카테고리의 높이를 변경하는 로직 */
     Object.entries(categoryMap).forEach(([category, cylinderList]) => {
       const isIncreasing = category === currentCategory;
-      const second = 0.35;
+      const second = 1;
       const changeRate = 1 / second / 1 / 60; // Rate of change per frame
       const easingFunction = isIncreasing ? easeOutCubic : easeInCubic;
 
@@ -393,11 +366,9 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
       targetCylinderLocation;
 
     /** NOTE: set progress */
-    const second = 0.5;
+    const second = 0.35;
     const changeRate = 1 / second / 1 / 60; // Rate of change per frame
     const nextprogress = Math.min(progress + changeRate, 1);
-
-    console.log(easeOutCubic(progress));
 
     const currentCameraX = cameraStartLocation.x;
     const currentCameraZ = cameraStartLocation.z;
@@ -407,16 +378,19 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     const nx = (x - (z % 2) / 2) * 2;
     const nz = z * Math.sqrt(Math.PI);
 
+    const angleX = Math.PI * 3;
+    const angleZ = 6 * Math.PI;
+
     /** NOTE: set camera & controls */
     this.#camera.position.set(
-      currentCameraX + (nx - currentCameraX) * progress,
-      10 * Math.PI,
-      currentCameraZ + (nz - currentCameraZ) * progress,
+      currentCameraX + (nx - currentCameraX + angleX) * easeOutCubic(progress),
+      8 * Math.PI,
+      currentCameraZ + (nz - currentCameraZ + angleZ) * easeOutCubic(progress),
     );
     this.#controls.target.set(
-      currentControlsX + (nx - currentControlsX) * progress,
+      currentControlsX + (nx - currentControlsX) * easeOutCubic(progress),
       0,
-      currentControlsZ + (nz - currentControlsZ) * progress,
+      currentControlsZ + (nz - currentControlsZ) * easeOutCubic(progress),
     );
 
     if (progress >= 1) {
@@ -441,17 +415,17 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
       false,
     )?.[0]?.object ?? null) as Nullable<Cylinder>;
 
-    /** set mouse style */
+    /** NOTE: set mouse style */
     updateMouseStyle({ $canvas: this.$canvas, cylinder });
 
-    /** set cylinder enter & out event */
+    /** NOTE: set cylinder enter & out event */
     dispatchCylinderMouseEvent({
       $canvas: this.$canvas,
       prevHoveredCylinder,
       currentHoveredCylinder: cylinder,
     });
 
-    /** update cylinder state */
+    /** NOTE: update cylinder state */
     this.updateState({
       prevHoveredCylinder: cylinder,
     });
@@ -487,6 +461,8 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
   }
 
   onPointerClick() {
+    const { map } = this.#store;
+
     this.#raycaster.setFromCamera(this.#pointer, this.#camera);
     const intersects = this.#raycaster.intersectObjects(this.#scene.children);
 
@@ -496,6 +472,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
 
     const cylinder = intersects[0].object as Cylinder;
     const [x, z] = cylinder.name.split(".").map(Number) as [number, number];
+    const { category } = map[x]![z]!;
 
     this.updateState({
       currentSelectedCylinder: cylinder,
@@ -512,9 +489,12 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
         z: this.#controls.target.z,
       },
     });
+    if (typeof this.#onCylinderClick === "function") {
+      this.#onCylinderClick({ object: cylinder, location: { x, z }, category });
+    }
   }
 
-  /** render method */
+  /** NOTE: render method */
   render() {
     this.#camera.updateMatrix();
     this.#controls.update();
@@ -531,7 +511,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderTyp> {
     requestAnimationFrame(this.render);
   }
 
-  /** remove method */
+  /** NOTE: remove method */
   remove() {
     this.#scene.remove();
   }

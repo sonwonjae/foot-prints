@@ -19,5 +19,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "next-connect": "^1.0.0-next.4"
+  }
 }

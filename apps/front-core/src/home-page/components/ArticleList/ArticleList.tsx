@@ -1,18 +1,16 @@
 import type { ComponentProps } from "react";
 
-import { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useRef, useEffect } from "react";
 
-import { MOCK_ARTICLE_LIST } from "./Canvas.constants";
-import { CylinderMap } from "./Canvas.events";
+import { CylinderMap } from "./ArticleList.class";
+import { MOCK_ARTICLE_LIST } from "./ArticleList.constants";
 
-function Canvas({
+function ArticleList({
   ...props
 }: Omit<ComponentProps<"canvas">, "width" | "height">) {
+  const router = useRouter();
   const $canvasRef = useRef<HTMLCanvasElement>(null);
-  const [
-    articleList,
-    // setArticleList
-  ] = useState(MOCK_ARTICLE_LIST);
 
   useEffect(() => {
     if (!$canvasRef.current) {
@@ -23,9 +21,22 @@ function Canvas({
     const $canvas = $canvasRef.current;
     const cylinderMap = new CylinderMap({
       $canvas,
-      cylinderList: articleList,
-      bx: 0,
-      bz: 0,
+      cylinderList: MOCK_ARTICLE_LIST,
+      bx: Number(router.query.x),
+      bz: Number(router.query.z),
+      onCylinderClick: ({ location, category }) => {
+        const { x, z } = location;
+        if (!category) {
+          router.push(`/empty/${x}/0/${z}`, undefined, {
+            shallow: true,
+          });
+          return;
+        }
+
+        router.push(`/article/${x}/0/${z}`, undefined, {
+          shallow: true,
+        });
+      },
     });
 
     /** NOTE: render three */
@@ -56,10 +67,10 @@ function Canvas({
       /** NOTE: remove three */
       cylinderMap.remove();
     };
-  }, [$canvasRef.current]);
+  }, []);
 
   return (
     <canvas ref={$canvasRef} className="w-full h-full" {...props}></canvas>
   );
 }
-export default Canvas;
+export default ArticleList;

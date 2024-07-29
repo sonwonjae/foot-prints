@@ -1,23 +1,24 @@
-import { Article } from "./Canvas.type";
+import { Article } from "./ArticleList.type";
 
 const getRandomNumber = (min = 3, max = 10) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
 const generateRandomString = () => {
+  const [A, Z] = [65, 122];
   const textLength = getRandomNumber();
 
   return Array.from({ length: textLength }, () => {
-    const randomNumber = getRandomNumber(65, 122);
+    const randomNumber = getRandomNumber(A, Z);
     return String.fromCharCode(randomNumber);
   }).join("");
 };
 
 const generateRandomArticleList = (): Array<Article> => {
-  const categoryCount = getRandomNumber(10, 30);
+  const categoryCount = getRandomNumber(10, 25);
 
   return Array.from({ length: categoryCount }, (_, x) => {
-    const categoryArticleListLength = getRandomNumber(10, 30);
+    const categoryArticleListLength = getRandomNumber(30, 50);
     const category = generateRandomString();
 
     return Array.from({ length: categoryArticleListLength }, (_, z) => {
@@ -32,14 +33,7 @@ const generateRandomArticleList = (): Array<Article> => {
         height: getRandomNumber(0, 3),
       };
     });
-  })
-    .flat(Infinity)
-    .map((item) => {
-      return {
-        checked: false,
-        ...item,
-      };
-    }) as Array<Article>;
+  }).flat(Infinity) as Array<Article>;
 };
 
 export const MOCK_ARTICLE_LIST = generateRandomArticleList();

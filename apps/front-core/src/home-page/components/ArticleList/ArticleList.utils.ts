@@ -3,7 +3,7 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 
 import { resizeRendererToDisplaySize } from "@/three/utils/resize";
 
-import { Cylinder, Nullable } from "./Canvas.type";
+import { Cylinder } from "./ArticleList.type";
 
 export const resize = ({
   renderer,
@@ -58,6 +58,7 @@ export const initControls = ({
   controls.enableRotate = false;
 
   controls.maxPolarAngle = Math.PI / 2;
+  controls.enableZoom = false;
 
   return controls;
 };
