@@ -1,16 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import type { GetServerSideProps, GetServerSidePropsResult } from "next";
 
 import { createRouter } from "next-connect";
 
+import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { checkLand } from "@/middlewares/pages/land/checker";
 
 interface LandTypeParams {
   landType: string;
-}
-
-export default function LandTypePage() {
-  return null;
 }
 
 const router = createRouter<
@@ -18,14 +14,10 @@ const router = createRouter<
   ServerResponse
 >();
 
-router.use(checkLand);
+router.get(checkLand);
 
-export const getServerSideProps: GetServerSideProps = async ({
-  req,
-  res,
-  params,
-}) => {
-  // @ts-expect-error: attach params to req.params
-  req.params = params;
-  return router.run(req, res) as Promise<GetServerSidePropsResult<object>>;
-};
+export const getServerSideProps = makeGetServerSideProps(router);
+
+export default function LandTypePage() {
+  return null;
+}

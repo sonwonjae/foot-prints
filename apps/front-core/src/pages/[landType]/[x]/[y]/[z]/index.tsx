@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import type { GetServerSideProps, GetServerSidePropsResult } from "next";
 
 import { createRouter } from "next-connect";
 
 import { ArticleList } from "@/home-page/components";
+import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { checkLand } from "@/middlewares/pages/land/checker";
 import { cn } from "@/utils/tailwindcss";
 
@@ -14,14 +14,6 @@ interface LandTypeXYZParams {
   z: string;
 }
 
-export default function LandTypeXYZPage() {
-  return (
-    <main className={cn("w-screen", "h-screen", "relative")}>
-      <ArticleList />
-    </main>
-  );
-}
-
 const router = createRouter<
   IncomingMessage & { params?: LandTypeXYZParams; body?: object },
   ServerResponse
@@ -29,12 +21,12 @@ const router = createRouter<
 
 router.use(checkLand);
 
-export const getServerSideProps: GetServerSideProps = async ({
-  req,
-  res,
-  params,
-}) => {
-  // @ts-expect-error: attach params to req.params
-  req.params = params;
-  return router.run(req, res) as Promise<GetServerSidePropsResult<object>>;
-};
+export const getServerSideProps = makeGetServerSideProps(router);
+
+export default function LandTypeXYZPage() {
+  return (
+    <main className={cn("w-screen", "h-screen", "relative")}>
+      <ArticleList />
+    </main>
+  );
+}
