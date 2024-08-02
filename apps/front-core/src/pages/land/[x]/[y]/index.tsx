@@ -4,21 +4,23 @@ import { createRouter } from "next-connect";
 
 import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { checkLand } from "@/middlewares/pages/land/checker";
+import { pipe } from "@/middlewares/pages/utils/pipe";
 
-interface LandTypeXParams {
-  landType: string;
+interface LandTypeXYParams {
   x: string;
+  y: string;
 }
 
-const router = createRouter<
-  IncomingMessage & { params?: LandTypeXParams; body?: object },
-  ServerResponse
->();
+type LandTypeXYZReq = IncomingMessage & {
+  params?: LandTypeXYParams;
+};
 
-router.get(checkLand);
+const router = createRouter<LandTypeXYZReq, ServerResponse>();
+
+router.get(pipe<LandTypeXYZReq>(checkLand));
 
 export const getServerSideProps = makeGetServerSideProps(router);
 
-export default function LandTypeXPage() {
+export default function LandTypeXYPage() {
   return null;
 }

@@ -1,4 +1,3 @@
-// middleware.ts
 import type { NextFetchEvent, NextRequest } from "next/server";
 
 import { NextResponse } from "next/server";
@@ -7,7 +6,6 @@ import { createEdgeRouter } from "next-connect";
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
 router.use(async (request, event, next) => {
-  console.log(`${request.method} ${request.url}`);
   return next();
 });
 

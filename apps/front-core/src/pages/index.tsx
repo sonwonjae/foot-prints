@@ -18,7 +18,7 @@ const router = createRouter<
 >().get((): GetServerSidePropsResult<HomePageProps> => {
   return {
     redirect: {
-      destination: "/none/0/0/0",
+      destination: "/land/0/0/0",
       permanent: false,
     },
   };

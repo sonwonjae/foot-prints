@@ -50,43 +50,92 @@ export type Database = {
           createdAt: string;
           description: string;
           id: string;
-          imageSrc: string | null;
           isPublic: boolean;
           title: string;
           updatedAt: string;
-          userId: string | null;
         };
         Insert: {
           content?: string;
           createdAt?: string;
           description?: string;
           id?: string;
-          imageSrc?: string | null;
           isPublic?: boolean;
           title?: string;
           updatedAt?: string;
-          userId?: string | null;
         };
         Update: {
           content?: string;
           createdAt?: string;
           description?: string;
           id?: string;
-          imageSrc?: string | null;
           isPublic?: boolean;
           title?: string;
           updatedAt?: string;
-          userId?: string | null;
+        };
+        Relationships: [];
+      };
+      foot_prints__locations: {
+        Row: {
+          createdAt: string;
+          footPrintId: string;
+          id: string;
+          locationId: string;
+          updatedAt: string;
+        };
+        Insert: {
+          createdAt?: string;
+          footPrintId: string;
+          id?: string;
+          locationId: string;
+          updatedAt?: string;
+        };
+        Update: {
+          createdAt?: string;
+          footPrintId?: string;
+          id?: string;
+          locationId?: string;
+          updatedAt?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'foot_prints_userId_fkey';
-            columns: ['userId'];
+            foreignKeyName: 'foot_prints__locations_footPrintId_fkey';
+            columns: ['footPrintId'];
             isOneToOne: false;
-            referencedRelation: 'users';
+            referencedRelation: 'foot_prints';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'foot_prints__locations_locationId_fkey';
+            columns: ['locationId'];
+            isOneToOne: false;
+            referencedRelation: 'locations';
             referencedColumns: ['id'];
           },
         ];
+      };
+      locations: {
+        Row: {
+          createdAt: string;
+          id: string;
+          updatedAt: string;
+          x: number;
+          z: number;
+        };
+        Insert: {
+          createdAt?: string;
+          id?: string;
+          updatedAt?: string;
+          x: number;
+          z: number;
+        };
+        Update: {
+          createdAt?: string;
+          id?: string;
+          updatedAt?: string;
+          x?: number;
+          z?: number;
+        };
+        Relationships: [];
       };
       users: {
         Row: {
@@ -120,6 +169,84 @@ export type Database = {
           updatedAt?: string;
         };
         Relationships: [];
+      };
+      users__foot_prints: {
+        Row: {
+          createdAt: string;
+          footPrintId: string;
+          id: string;
+          updatedAt: string;
+          userId: string;
+        };
+        Insert: {
+          createdAt?: string;
+          footPrintId: string;
+          id?: string;
+          updatedAt?: string;
+          userId: string;
+        };
+        Update: {
+          createdAt?: string;
+          footPrintId?: string;
+          id?: string;
+          updatedAt?: string;
+          userId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'users__foot_prints_footPrintId_fkey';
+            columns: ['footPrintId'];
+            isOneToOne: false;
+            referencedRelation: 'foot_prints';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'users__foot_prints_userId_fkey';
+            columns: ['userId'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      users__locations: {
+        Row: {
+          createdAt: string;
+          id: string;
+          locationId: string;
+          updateAt: string;
+          userId: string;
+        };
+        Insert: {
+          createdAt?: string;
+          id?: string;
+          locationId: string;
+          updateAt?: string;
+          userId: string;
+        };
+        Update: {
+          createdAt?: string;
+          id?: string;
+          locationId?: string;
+          updateAt?: string;
+          userId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'users__locations_locationId_fkey';
+            columns: ['locationId'];
+            isOneToOne: false;
+            referencedRelation: 'locations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'users__locations_userId_fkey';
+            columns: ['userId'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
     Views: {

@@ -4,7 +4,6 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { convertStringToHexColor, darker } from "@/three/utils/color";
 import { createCylinder } from "@/three/utils/cylinder";
 
-import { AROUND_DIRECT } from "./ArticleList.constants";
 import {
   Cylinder,
   CylinderMapStore,
@@ -83,7 +82,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.updateTargetCylinder = this.updateTargetCylinder.bind(this);
     this.resetTargetCylinder = this.resetTargetCylinder.bind(this);
     this.createEmptyCylinder = this.createEmptyCylinder.bind(this);
-    this.createEmptyCylinderAround = this.createEmptyCylinderAround.bind(this);
     this.animateCategoryCylinderList =
       this.animateCategoryCylinderList.bind(this);
     this.animateMoveToTargetCylinder =
@@ -130,45 +128,39 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.#pointer = new THREE.Vector2();
 
     /** NOTE: create fill cylinder list */
-    cylinderList.forEach(
-      ({ location = { x: 0, z: 0 }, category = "", height }) => {
-        const { x, z } = location;
-        const color = convertStringToHexColor(category ?? "");
-        const minHeight = 0.4;
-        const maxHeight = 3;
-        const limitedHeight = Math.min(
-          maxHeight,
-          Math.max(minHeight, height ?? 0),
-        );
+    cylinderList.forEach(({ location = { x: 0, z: 0 }, category, height }) => {
+      const { x, z } = location;
+      const color = category ? convertStringToHexColor(category) : "#FFFFFF";
+      const minHeight = 0.4;
+      const maxHeight = 3;
+      const limitedHeight = Math.min(
+        maxHeight,
+        Math.max(minHeight, height ?? 0),
+      );
 
-        const cylinder = createCylinder(this.#scene, {
-          x,
-          z,
-          color,
-          height: limitedHeight,
-        });
+      const cylinder = createCylinder(this.#scene, {
+        x,
+        z,
+        color,
+        height: limitedHeight,
+      });
 
-        this.updateCylinderMap({
-          cylinder,
-          x,
-          z,
-          color,
-          category,
-        });
+      this.updateCylinderMap({
+        cylinder,
+        x,
+        z,
+        color,
+        category,
+      });
+      if (category) {
         this.updateCategoryMap({
           cylinder,
-          category: category ?? "",
+          category,
           x,
           z,
           height: limitedHeight,
         });
-      },
-    );
-
-    /** NOTE: create empty cylinder list */
-    cylinderList.forEach(({ location = { x: 0, z: 0 } }) => {
-      const { x, z } = location;
-      this.createEmptyCylinderAround({ x, z, length: 2 });
+      }
     });
 
     /** NOTE: set init target cylinder location  */
@@ -298,38 +290,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         category: null,
       };
     }
-  }
-
-  /** NOTE: 파라미터로 전달받은 x, z 좌표 주변에 empty cylinder list를 만드는 method */
-  createEmptyCylinderAround({
-    x,
-    z,
-    length = 1,
-  }: {
-    x: number;
-    z: number;
-    length?: number;
-  }) {
-    AROUND_DIRECT.forEach(([dx, dz]) => {
-      const [nx, nz] = [x + dx, z + dz];
-
-      if (nx < 0 || nz < 0) {
-        return;
-      }
-
-      this.createEmptyCylinder({
-        x: nx,
-        z: nz,
-      });
-
-      if (length - 1 > 0) {
-        this.createEmptyCylinderAround({
-          x: nx,
-          z: nz,
-          length: length - 1,
-        });
-      }
-    });
   }
 
   animateCategoryCylinderList() {

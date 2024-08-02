@@ -1,10 +1,12 @@
 import type { ComponentProps } from "react";
 
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { useRef, useEffect } from "react";
 
+import { makeGetQueryOptions } from "@/utils/react-query";
+
 import { CylinderMap } from "./ArticleList.class";
-import { MOCK_ARTICLE_LIST } from "./ArticleList.constants";
 
 function ArticleList({
   ...props
@@ -12,28 +14,32 @@ function ArticleList({
   const router = useRouter();
   const $canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const locationQuery = makeGetQueryOptions({
+    url: `/api/locations/${Number(router.query.x)}/${Number(router.query.z)}`,
+  });
+  const { data: locationList } = useQuery(
+    locationQuery.getQueryOptionsInClient(),
+  );
+
   useEffect(() => {
     if (!$canvasRef.current) {
       return;
+    }
+
+    if (!locationList) {
+      throw new Error("location list를 불러오는데에 실패했습니다.");
     }
 
     /** NOTE: initial three */
     const $canvas = $canvasRef.current;
     const cylinderMap = new CylinderMap({
       $canvas,
-      cylinderList: MOCK_ARTICLE_LIST,
+      cylinderList: locationList,
       bx: Number(router.query.x),
       bz: Number(router.query.z),
-      onCylinderClick: ({ location, category }) => {
+      onCylinderClick: ({ location }) => {
         const { x, z } = location;
-        if (!category) {
-          router.push(`/empty/${x}/0/${z}`, undefined, {
-            shallow: true,
-          });
-          return;
-        }
-
-        router.push(`/article/${x}/0/${z}`, undefined, {
+        router.push(`/land/${x}/0/${z}`, undefined, {
           shallow: true,
         });
       },
@@ -45,7 +51,7 @@ function ArticleList({
     /** NOTE: bind event */
     window.addEventListener("resize", cylinderMap.render);
     window.addEventListener("pointermove", cylinderMap.onPointerMove);
-    window.addEventListener("pointerdown", cylinderMap.onPointerClick);
+    window.addEventListener("click", cylinderMap.onPointerClick);
 
     /** NOTE: bind custom event */
     $canvas.addEventListener("cylinder-enter", cylinderMap.onCylinderEnter);
@@ -55,7 +61,7 @@ function ArticleList({
       /** NOTE: remove event */
       window.removeEventListener("resize", cylinderMap.render);
       window.removeEventListener("pointermove", cylinderMap.onPointerMove);
-      window.removeEventListener("pointerdown", cylinderMap.onPointerClick);
+      window.removeEventListener("click", cylinderMap.onPointerClick);
 
       /** NOTE: remove custom event */
       $canvas.removeEventListener(

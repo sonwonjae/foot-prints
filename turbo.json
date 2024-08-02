@@ -1,4 +1,9 @@
 {
+  "globalEnv": [
+    "NEXT_PUBLIC_GITHUB_OAUTH_APP_CLIENT_ID",
+    "NEXT_PUBLIC_GITHUB_OAUTH_APP_CLIENT_SECRET",
+    "NEXT_PUBLIC_SERVER_HOST"
+  ],
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {

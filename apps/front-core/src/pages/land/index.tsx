@@ -5,9 +5,7 @@ import { createRouter } from "next-connect";
 import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { checkLand } from "@/middlewares/pages/land/checker";
 
-interface LandTypeParams {
-  landType: string;
-}
+interface LandTypeParams {}
 
 const router = createRouter<
   IncomingMessage & { params?: LandTypeParams; body?: object },
