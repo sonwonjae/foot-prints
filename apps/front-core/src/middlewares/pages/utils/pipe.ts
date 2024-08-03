@@ -1,12 +1,18 @@
-import { IncomingMessage } from "http";
+import type {
+  Middleware,
+  CustomIncomingMessage,
+} from "@/middlewares/pages/type";
 
 import { GetServerSidePropsResult } from "next";
 
-import { Middleware } from "../type";
-
-export const pipe = <Req = IncomingMessage, Props extends object = object>(
-  ...middlewareList: Array<Middleware<IncomingMessage & Req, Props | object>>
-): Middleware<IncomingMessage & Req, Props> => {
+export const pipe = <
+  Req = CustomIncomingMessage,
+  Props extends object = object,
+>(
+  ...middlewareList: Array<
+    Middleware<CustomIncomingMessage & Req, Props | object>
+  >
+): Middleware<CustomIncomingMessage & Req, Props> => {
   return async (...args) => {
     let accProps: UnionToIntersection<
       GetServerSidePropsResult<Props>

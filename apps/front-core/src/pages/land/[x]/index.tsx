@@ -1,16 +1,17 @@
-import type { IncomingMessage, ServerResponse } from "http";
+import type { CustomIncomingMessage, Params } from "@/middlewares/pages/type";
+import type { ServerResponse } from "http";
 
 import { createRouter } from "next-connect";
 
 import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { checkLand } from "@/middlewares/pages/land/checker";
 
-interface LandTypeXParams {
+interface LandTypeXParams extends Params {
   x: string;
 }
 
 const router = createRouter<
-  IncomingMessage & { params?: LandTypeXParams; body?: object },
+  CustomIncomingMessage<LandTypeXParams>,
   ServerResponse
 >();
 

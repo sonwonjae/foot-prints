@@ -3,20 +3,32 @@ import { IncomingMessage, ServerResponse } from "http";
 import { GetServerSidePropsResult } from "next";
 import { createRouter } from "next-connect";
 
-export type DefaultReq = IncomingMessage & {
-  params?: object;
-  body?: object;
+export interface Params {
+  [key: string]: string | undefined;
+}
+
+export interface Query {
+  [key: string]: string | string[] | undefined;
+}
+
+export type CustomIncomingMessage<
+  TParams extends Params = Params,
+  TQuery extends Query = Query,
+> = IncomingMessage & {
+  pathname: string;
+  params?: TParams;
+  query: TQuery;
 };
 
 export type Middleware<
-  Req extends DefaultReq = IncomingMessage,
+  Req extends CustomIncomingMessage = CustomIncomingMessage,
   Props extends object = object,
 > = (
   ...params: Parameters<
     Exclude<
       Parameters<
         ReturnType<
-          typeof createRouter<IncomingMessage & Req, ServerResponse>
+          typeof createRouter<CustomIncomingMessage & Req, ServerResponse>
         >["get"]
       >[0],
       string | RegExp

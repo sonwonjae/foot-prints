@@ -1,20 +1,27 @@
-import type { Middleware } from "@/middlewares/pages/type";
+import type {
+  Middleware,
+  Params,
+  Query,
+  CustomIncomingMessage,
+} from "@/middlewares/pages/type";
 
-import { IncomingMessage } from "http";
+import { pipe } from "@/middlewares/pages/utils/pipe";
 
-interface LandLocation {
+import { checkSingleQuery } from "../common/queryValidation";
+
+interface LandLocation extends Params {
   x?: string;
   y?: string;
   z?: string;
 }
 
-export const checkLandQuery = async () => {
-  let a = ''
-};
+interface LandPaginationQuery extends Query {
+  range?: string | string[];
+}
 
-export const checkLand: Middleware<
-  IncomingMessage & { params?: LandLocation }
-> = async (req) => {
+type Req = CustomIncomingMessage<LandLocation, LandPaginationQuery>;
+
+const checkLandLocationType: Middleware<Req> = async (req) => {
   const { x, y, z } = {
     x: Number(req.params?.x),
     y: Number(req.params?.y),
@@ -34,3 +41,18 @@ export const checkLand: Middleware<
     props: {},
   };
 };
+
+const checkLandQuery = pipe<Req>(
+  checkSingleQuery({
+    queryName: "range",
+    defaultSingleQuery: "5",
+    validationMap: {
+      5: true,
+      10: true,
+      25: true,
+      50: true,
+    },
+  }),
+);
+
+export const checkLand = pipe<Req>(checkLandLocationType, checkLandQuery);

@@ -1,4 +1,5 @@
-import type { IncomingMessage, ServerResponse } from "http";
+import type { CustomIncomingMessage } from "@/middlewares/pages/type";
+import type { ServerResponse } from "http";
 
 import {
   dehydrate,
@@ -18,9 +19,7 @@ import { cn } from "@/utils/tailwindcss";
 import { ArticleList, LandInformationPanel } from "./components";
 import { LandTypeXYZParams } from "./types/page.types";
 
-type LandTypeXYZReq = IncomingMessage & {
-  params?: LandTypeXYZParams;
-};
+type LandTypeXYZReq = CustomIncomingMessage<LandTypeXYZParams>;
 
 interface LandTypeXYZPageProps {
   dehydratedState: DehydratedState;
