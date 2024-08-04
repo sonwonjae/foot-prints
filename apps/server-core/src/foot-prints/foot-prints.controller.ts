@@ -12,6 +12,7 @@ import { CreateFootPrintDto } from './dto/create-foot-print.dto';
 import { UpdateFootPrintDto } from './dto/update-foot-print.dto';
 import { User } from 'src/users/users.decorator';
 import { Tables } from 'src/supabase/supabase.types';
+import { GetFootPrintParamDto } from './dto/get-foot-print.dto';
 
 @Controller('foot-prints')
 export class FootPrintsController {
@@ -34,14 +35,14 @@ export class FootPrintsController {
 
   @Get('auth/:x/:z')
   checkAuth(
-    @Param() param: { x: string; z: string },
+    @Param() param: GetFootPrintParamDto,
     @User() user: Tables<'users'>,
   ) {
     return this.footPrintsService.checkAuth(param, user);
   }
 
   @Get('exist/:x/:z')
-  check(@Param() param: { x: string; z: string }) {
+  check(@Param() param: GetFootPrintParamDto) {
     return this.footPrintsService.checkExist(param);
   }
 

@@ -3,6 +3,10 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Tables } from 'src/supabase/supabase.types';
+import {
+  GetLocationParamDto,
+  GetLocationQueryDto,
+} from './dto/get-location.dto';
 
 @Injectable()
 export class LocationsService {
@@ -49,19 +53,18 @@ export class LocationsService {
   }
 
   async findLocationListPagination(
-    /** FIXME: type number로 강제하는 법 찾은 뒤 수정 */
-    { x, z }: { x: string; z: string },
-    { range = '0' }: { range: string },
+    { x, z }: GetLocationParamDto,
+    { range }: GetLocationQueryDto,
   ) {
     const supabase = this.supabaseService.getClient();
 
     const { data: locations } = await supabase
       .from('locations')
       .select('*')
-      .gte('x', Number(x) - Number(range))
-      .lte('x', Number(x) + Number(range))
-      .gte('z', Number(z) - Number(range))
-      .lte('z', Number(z) + Number(range));
+      .gte('x', x - range)
+      .lte('x', x + range)
+      .gte('z', z - range)
+      .lte('z', z + range);
 
     return locations.map((location) => {
       return {
@@ -74,17 +77,14 @@ export class LocationsService {
   }
 
   /** TODO: 고도화 필요 */
-  async findOne(
-    /** FIXME: type number로 강제하는 법 찾은 뒤 수정 */
-    { x, z }: { x: string; z: string },
-  ) {
+  async findOne({ x, z }: GetLocationParamDto) {
     const supabase = this.supabaseService.getClient();
 
     const { data: location } = await supabase
       .from('locations')
       .select('id')
-      .eq('x', Number(x))
-      .eq('z', Number(z))
+      .eq('x', x)
+      .eq('z', z)
       .single();
 
     const { data: userLocation } = await supabase

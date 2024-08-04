@@ -3,6 +3,7 @@ import { CreateFootPrintDto } from './dto/create-foot-print.dto';
 import { UpdateFootPrintDto } from './dto/update-foot-print.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Tables } from 'src/supabase/supabase.types';
+import { GetFootPrintParamDto } from './dto/get-foot-print.dto';
 
 @Injectable()
 export class FootPrintsService {
@@ -21,18 +22,14 @@ export class FootPrintsService {
     return `This action returns a #${id} footPrint`;
   }
 
-  async checkAuth(
-    /** FIXME: type number로 강제하는 법 찾은 뒤 수정 */
-    { x, z }: { x: string; z: string },
-    user: Tables<'users'>,
-  ) {
+  async checkAuth({ x, z }: GetFootPrintParamDto, user: Tables<'users'>) {
     const supabase = this.supabaseService.getClient();
 
     const { data: location } = await supabase
       .from('locations')
       .select('*')
-      .eq('x', Number(x))
-      .eq('z', Number(z))
+      .eq('x', x)
+      .eq('z', z)
       .single();
 
     if (!location) {
@@ -57,17 +54,14 @@ export class FootPrintsService {
    * 1. 개척만 해두고 발자국은 남기지 않은 땅의 갯수가 [3]개 이상이라면 개척할 수 없음
    * 2. 발자국을 남겼으나 비공개인 발자국이 [10]개 이상이라면 개척할 수 없음
    */
-  async checkExist(
-    /** FIXME: type number로 강제하는 법 찾은 뒤 수정 */
-    { x, z }: { x: string; z: string },
-  ) {
+  async checkExist({ x, z }: GetFootPrintParamDto) {
     const supabase = this.supabaseService.getClient();
 
     const { data: location } = await supabase
       .from('locations')
       .select('*')
-      .eq('x', Number(x))
-      .eq('z', Number(z))
+      .eq('x', x)
+      .eq('z', z)
       .single();
 
     if (!location) {

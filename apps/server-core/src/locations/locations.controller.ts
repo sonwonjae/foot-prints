@@ -13,6 +13,10 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { User } from 'src/users/users.decorator';
 import { Tables } from 'src/supabase/supabase.types';
+import {
+  GetLocationParamDto,
+  GetLocationQueryDto,
+} from './dto/get-location.dto';
 
 @Controller('locations')
 export class LocationsController {
@@ -33,14 +37,14 @@ export class LocationsController {
 
   @Get('list/:x/:z')
   findLocationListPagination(
-    @Param() param: { x: string; z: string },
-    @Query() query: { range: string },
+    @Param() param: GetLocationParamDto,
+    @Query() query: GetLocationQueryDto,
   ) {
     return this.locationsService.findLocationListPagination(param, query);
   }
 
   @Get(':x/:z')
-  findOne(@Param() param: { x: string; z: string }) {
+  findOne(@Param() param: GetLocationParamDto) {
     return this.locationsService.findOne(param);
   }
 
