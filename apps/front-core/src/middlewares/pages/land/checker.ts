@@ -48,9 +48,8 @@ const checkLandQuery = pipe<Req>(
     defaultSingleQuery: "5",
     validationMap: {
       5: true,
-      10: true,
+      15: true,
       25: true,
-      50: true,
     },
   }),
 );

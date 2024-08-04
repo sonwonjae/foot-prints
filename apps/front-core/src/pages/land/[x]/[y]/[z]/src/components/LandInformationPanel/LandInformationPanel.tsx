@@ -12,7 +12,9 @@ function LandInformationPanel() {
     url: `/api/locations/${Number(router.query.x)}/${Number(router.query.z)}`,
   });
 
-  const { data: location } = useQuery(locationQuery.getQueryOptionsInClient());
+  const { data: location, isLoading: isLocationLoading } = useQuery(
+    locationQuery.getQueryOptionsInClient(),
+  );
 
   const { mutateAsync: pioneerLocation } = useMutation({
     mutationFn: async () => {
@@ -23,6 +25,9 @@ function LandInformationPanel() {
     },
   });
   const moveUnit = async () => {
+    if (isLocationLoading) {
+      return;
+    }
     if (location?.type === "empty") {
       await pioneerLocation();
     }
@@ -57,8 +62,9 @@ function LandInformationPanel() {
       }}
     >
       {/* FIXME: category가 있을 경우에만 표시하도록 수정 필요 */}
-      <Button>[category] 방문하기</Button>
-      <Button onClick={moveUnit}>
+      {/* <Button>[category] 방문하기</Button> */}
+      {/* TODO: loading ui 추가 - to shadcn */}
+      <Button onClick={moveUnit} disabled={isLocationLoading}>
         {location?.type === "mine-location" && "마저 발자취 남기기"}
         {location?.type === "empty" && "개척하기"}
       </Button>
