@@ -78,8 +78,23 @@ export const checkSingleQuery = <
     const isInvalidSingleQuery = !singleQueryValidation.isValid;
 
     if (isInvalidSingleQuery) {
+      /** NOTE: next 특성상 req.query에 req.params도 포함하고 있어서 params는 제외해줘야함 */
+      const onlyQuery = Object.entries(req.query || {}).reduce(
+        (acc, [key, value]) => {
+          if (typeof (req.params || {})[key] !== "undefined") {
+            return acc;
+          }
+
+          return {
+            ...acc,
+            [key]: value,
+          };
+        },
+        {},
+      );
+
       const validQuery = {
-        ...req.query,
+        ...onlyQuery,
         [queryName]: singleQueryValidation[queryName],
       };
 
@@ -87,7 +102,7 @@ export const checkSingleQuery = <
 
       return {
         redirect: {
-          destination: `${req.pathname}${validQueryString}`,
+          destination: `${validQueryString}`,
           permanent: false,
         },
       };

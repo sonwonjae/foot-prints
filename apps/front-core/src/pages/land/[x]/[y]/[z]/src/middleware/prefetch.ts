@@ -8,7 +8,7 @@ import QueryString from "qs";
 import { makeGetQueryOptions } from "@/utils/react-query";
 
 export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
-  const { x = 0, z = 0 } = req.params || {};
+  const { x = "0", z = "0" } = req.params || {};
   const queryClient = new QueryClient();
 
   const queryString = `?${QueryString.stringify({

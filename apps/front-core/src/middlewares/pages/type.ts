@@ -15,7 +15,6 @@ export type CustomIncomingMessage<
   TParams extends Params = Params,
   TQuery extends Query = Query,
 > = IncomingMessage & {
-  pathname: string;
   params?: TParams;
   query: TQuery;
 };

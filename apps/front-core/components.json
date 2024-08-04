@@ -11,7 +11,7 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@/src/shad-cn",
-    "utils": "@/src/utils/shad-cn"
+    "components": "@/shad-cn/components",
+    "utils": "@/utils/tailwindcss"
   }
 }

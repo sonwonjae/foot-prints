@@ -31,9 +31,7 @@ function ArticleList({
 
   const onCylinderClick: OnCylinderClick = ({ location }) => {
     const { x, z } = location;
-    router.push(`/land/${x}/0/${z}${queryString}`, undefined, {
-      shallow: true,
-    });
+    router.push(`/land/${x}/0/${z}${queryString}`);
   };
 
   /** NOTE: set article list canvas */

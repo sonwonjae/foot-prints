@@ -2,6 +2,11 @@ import type { GetQueryOptions, MakeGetQueryOptions } from "./types";
 
 import axios, { AxiosError } from "axios";
 
+export const apiAxios = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_SERVER_HOST,
+  // timeout: 1000,
+});
+
 export const makeGetQueryOptions: MakeGetQueryOptions = <
   TQueryFnData,
   Url extends string = `/api/${string}`,
@@ -11,11 +16,6 @@ export const makeGetQueryOptions: MakeGetQueryOptions = <
   url: Url;
 }) => {
   const method = "GET";
-
-  const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_SERVER_HOST,
-    timeout: 1000,
-  });
 
   const getQueryOptionsInClient: GetQueryOptions<TQueryFnData> = ({
     axiosConfig,
@@ -31,7 +31,7 @@ export const makeGetQueryOptions: MakeGetQueryOptions = <
       ] as const,
       queryFn: async () => {
         try {
-          const { data } = await axiosInstance(url, {
+          const { data } = await apiAxios(url, {
             method,
             withCredentials: true,
             ...axiosConfig,
@@ -55,9 +55,6 @@ export const makeGetQueryOptions: MakeGetQueryOptions = <
     axiosConfig,
     queryOptions,
   } = {}) => {
-    /** NOTE: next serverside req에는 cookie가 안 담기기 때문에 강제 cookie 주입 */
-    //   axiosInstance.defaults.headers.Cookie = req.headers.cookie!;
-
     return {
       ...queryOptions,
       enabled: false,
@@ -69,7 +66,7 @@ export const makeGetQueryOptions: MakeGetQueryOptions = <
       ] as const,
       queryFn: async () => {
         try {
-          const { data } = await axiosInstance(url, {
+          const { data } = await apiAxios(url, {
             method,
             withCredentials: true,
             ...axiosConfig,
@@ -88,6 +85,7 @@ export const makeGetQueryOptions: MakeGetQueryOptions = <
       },
     };
   };
+
   return {
     baseKey: [url, method] as const,
     getQueryOptionsInClient,
