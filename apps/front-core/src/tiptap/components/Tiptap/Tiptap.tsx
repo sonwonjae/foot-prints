@@ -17,7 +17,6 @@ import StarterKit from "@tiptap/starter-kit";
 import { cn } from "@/utils/tailwindcss";
 
 function Tiptap({ className = "" }) {
-  console.log({ className });
   const editor = useEditor({
     extensions: [
       StarterKit,

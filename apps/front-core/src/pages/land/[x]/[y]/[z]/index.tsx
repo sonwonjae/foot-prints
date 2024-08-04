@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { createRouter } from "next-connect";
+import QueryString from "qs";
 
 import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { checkLand } from "@/middlewares/pages/land/checker";
@@ -32,8 +33,12 @@ router.get(
     const { x = 0, z = 0 } = req.params || {};
     const queryClient = new QueryClient();
 
+    const queryString = `?${QueryString.stringify({
+      range: req.query.range,
+    })}`;
+
     const locationQuery = makeGetQueryOptions({
-      url: `/api/locations/${Number(x)}/${Number(z)}`,
+      url: `/api/locations/${Number(x)}/${Number(z)}${queryString}`,
     });
     const queryOptions = locationQuery.getQueryOptionsInServer();
 

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -26,8 +27,11 @@ export class LocationsController {
   }
 
   @Get(':x/:z')
-  findLocationListPagination(@Param('x') x: number, @Param('z') z: number) {
-    return this.locationsService.findLocationListPagination(x, z);
+  findLocationListPagination(
+    @Param() param: { x: string; z: string },
+    @Query() query: { range: string },
+  ) {
+    return this.locationsService.findLocationListPagination(param, query);
   }
 
   @Get(':id')

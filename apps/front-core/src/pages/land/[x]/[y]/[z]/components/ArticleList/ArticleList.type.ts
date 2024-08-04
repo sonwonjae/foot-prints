@@ -30,6 +30,7 @@ export interface ArticleMap {
       >;
       color: `#${string}`;
       category: Cateogry;
+      progress: number;
     };
   };
 }
@@ -61,13 +62,14 @@ interface TargetCylinderLocation extends CylinderLocation {
   controlsStartLocation: CylinderLocation;
 }
 
-export interface CylinderMapStore {
+export interface CylinderMapStore<CylinderType> {
   currentSelectedCylinder: Nullable<Cylinder>;
   currentCategory: Nullable<string>;
   prevHoveredCylinder: Nullable<Cylinder>;
   map: ArticleMap;
   categoryMap: CategoryMap;
   targetCylinderLocation: Nullable<TargetCylinderLocation>;
+  cylinderList: Array<CylinderType>;
 }
 
 export interface OnCylinderClick {
@@ -76,6 +78,10 @@ export interface OnCylinderClick {
     location: { x: number; z: number };
     category: Nullable<string>;
   }): void;
+}
+
+export interface CylinderMapEvent {
+  onCylinderClick: OnCylinderClick;
 }
 
 export interface DefaultCylinderType {

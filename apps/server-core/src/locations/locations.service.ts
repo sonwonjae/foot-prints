@@ -16,12 +16,21 @@ export class LocationsService {
     return `This action returns all locations`;
   }
 
-  async findLocationListPagination(x: number, z: number) {
+  async findLocationListPagination(
+    /** FIXME: type number로 강제하는 법 찾은 뒤 수정 */
+    { x, z }: { x: string; z: string },
+    { range = '0' }: { range: string },
+  ) {
     const supabase = this.supabaseService.getClient();
 
-    const { data: locations } = await supabase.from('locations').select('*');
+    const { data: locations } = await supabase
+      .from('locations')
+      .select('*')
+      .gte('x', Number(x) - Number(range))
+      .lte('x', Number(x) + Number(range))
+      .gte('z', Number(z) - Number(range))
+      .lte('z', Number(z) + Number(range));
 
-    console.log(`x: ${x}`, `z: ${z}`);
     return locations.map((location) => {
       return {
         location: {

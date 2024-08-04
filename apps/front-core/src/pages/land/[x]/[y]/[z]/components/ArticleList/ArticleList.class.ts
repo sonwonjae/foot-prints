@@ -8,7 +8,7 @@ import {
   Cylinder,
   CylinderMapStore,
   DefaultCylinderType,
-  OnCylinderClick,
+  CylinderMapEvent,
   CylinderMapConstructorParam,
   UpdateCylinderMapParam,
   UpdateCategoryMapParam,
@@ -27,19 +27,23 @@ import {
 
 export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: CylinderMap instance state */
-  #store: CylinderMapStore = {
+  #store: CylinderMapStore<CylinderType> = {
     currentSelectedCylinder: null,
     currentCategory: null,
     prevHoveredCylinder: null,
     map: {},
     categoryMap: {},
     targetCylinderLocation: null,
+    cylinderList: [],
+  };
+
+  /** NOTE: bind event handler */
+  #event: CylinderMapEvent = {
+    onCylinderClick: () => {},
   };
 
   /** NOTE: canvas element */
   $canvas: HTMLCanvasElement;
-
-  cylinderList: Array<CylinderType>;
 
   /** NOTE: THREE WebGLRenderer */
   #renderer: THREE.WebGLRenderer;
@@ -65,23 +69,22 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: base z 좌표 */
   #bz: number = 0;
 
-  /** NOTE: cylinder click event handler */
-  #onCylinderClick?: OnCylinderClick;
-
   constructor({
     $canvas,
     cylinderList,
     bx,
     bz,
-    onCylinderClick,
+    onCylinderClick = () => {},
   }: CylinderMapConstructorParam<CylinderType>) {
     /** NOTE: bind method this */
     this.updateState = this.updateState.bind(this);
+    this.updateEvent = this.updateEvent.bind(this);
+    this.addCylinderInScene = this.addCylinderInScene.bind(this);
+    this.drawCylinderList = this.drawCylinderList.bind(this);
     this.updateCylinderMap = this.updateCylinderMap.bind(this);
     this.updateCategoryMap = this.updateCategoryMap.bind(this);
     this.updateTargetCylinder = this.updateTargetCylinder.bind(this);
     this.resetTargetCylinder = this.resetTargetCylinder.bind(this);
-    this.createEmptyCylinder = this.createEmptyCylinder.bind(this);
     this.animateCategoryCylinderList =
       this.animateCategoryCylinderList.bind(this);
     this.animateMoveToTargetCylinder =
@@ -95,12 +98,14 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
     /** NOTE: bind constructor param in property */
     this.$canvas = $canvas;
-    this.cylinderList = cylinderList;
+    this.#store = { ...this.#store, cylinderList };
     this.#bx = bx ?? 0;
     this.#bz = bz ?? 0;
 
     /** NOTE: bind constructor param in property */
-    this.#onCylinderClick = onCylinderClick;
+    this.#event = {
+      onCylinderClick,
+    };
 
     /** NOTE: create renderer */
     this.#renderer = createRenderer({ $canvas: this.$canvas });
@@ -128,40 +133,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.#pointer = new THREE.Vector2();
 
     /** NOTE: create fill cylinder list */
-    cylinderList.forEach(({ location = { x: 0, z: 0 }, category, height }) => {
-      const { x, z } = location;
-      const color = category ? convertStringToHexColor(category) : "#FFFFFF";
-      const minHeight = 0.4;
-      const maxHeight = 3;
-      const limitedHeight = Math.min(
-        maxHeight,
-        Math.max(minHeight, height ?? 0),
-      );
-
-      const cylinder = createCylinder(this.#scene, {
-        x,
-        z,
-        color,
-        height: limitedHeight,
-      });
-
-      this.updateCylinderMap({
-        cylinder,
-        x,
-        z,
-        color,
-        category,
-      });
-      if (category) {
-        this.updateCategoryMap({
-          cylinder,
-          category,
-          x,
-          z,
-          height: limitedHeight,
-        });
-      }
-    });
+    this.drawCylinderList();
 
     /** NOTE: set init target cylinder location  */
     this.updateTargetCylinder({
@@ -171,11 +143,70 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   }
 
   /** NOTE: store에 존재하는 state를 업데이트하는 메서드 */
-  updateState(newState: Partial<CylinderMapStore>) {
+  updateState(newState: Partial<CylinderMapStore<CylinderType>>) {
     this.#store = {
       ...this.#store,
       ...newState,
     };
+  }
+
+  /** NOTE: event에 존재하는 handler를 업데이트하는 메서드 */
+  updateEvent(newEvent: Partial<CylinderMapEvent>) {
+    this.#event = {
+      ...this.#event,
+      ...newEvent,
+    };
+  }
+
+  addCylinderInScene({ location, category, height }: CylinderType) {
+    const { x, z } = location;
+
+    const color = category ? convertStringToHexColor(category) : "#FFFFFF";
+    const minHeight = 0.4;
+    const maxHeight = 3;
+    const limitedHeight = Math.min(maxHeight, Math.max(minHeight, height ?? 0));
+
+    const cylinder = createCylinder(this.#scene, {
+      x,
+      z,
+      color,
+      height: limitedHeight,
+    });
+
+    this.updateCylinderMap({
+      cylinder,
+      x,
+      z,
+      color,
+      category,
+    });
+    if (category) {
+      this.updateCategoryMap({
+        cylinder,
+        category,
+        x,
+        z,
+        height: limitedHeight,
+      });
+    }
+  }
+
+  /** NOTE: cylinder list를 canvas에 그리는 메서드 */
+  drawCylinderList() {
+    // this.#scene.clear();
+    this.#store.cylinderList.forEach((cylinderInfo) => {
+      const { location } = cylinderInfo;
+      const { x, z } = location;
+
+      /** NOTE: map의 x.z 좌표에 cylinder가 존재하지 않으면 추가 */
+      if (!this.#store.map?.[x]?.[z]?.isExist) {
+        this.addCylinderInScene(cylinderInfo);
+        return;
+      }
+      // const info = this.#store.map[x][z];
+      // this.#scene.remove(info.cylinder);
+      console.log(`come in [${x}.${z}]`, this.#store.map?.[x]?.[z]);
+    });
   }
 
   /** NOTE: store에 존재하는 state 중 map의 특정 좌표에 cylinder를 업데이트하는 메서드 */
@@ -197,6 +228,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         cylinder,
         color,
         category: category ?? null,
+        progress: 0,
       };
     }
   }
@@ -267,29 +299,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.updateState({
       targetCylinderLocation: null,
     });
-  }
-
-  /** NOTE: 파라미터로 전달받은 x, z 좌표에 empty cylinder 하나 만드는 method */
-  createEmptyCylinder({ x, z }: { x: number; z: number }) {
-    const { map } = this.#store;
-
-    if (!map[x]) {
-      map[x] = {};
-    }
-    if (!map[x][z]?.isExist) {
-      const cylinder = createCylinder(this.#scene, {
-        x: x,
-        z: z,
-        color: "#FFFFFF",
-        height: 0.2,
-      });
-      map[x][z] = {
-        isExist: true,
-        cylinder,
-        color: "#FFFFFF",
-        category: null,
-      };
-    }
   }
 
   animateCategoryCylinderList() {
@@ -449,8 +458,12 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         z: this.#controls.target.z,
       },
     });
-    if (typeof this.#onCylinderClick === "function") {
-      this.#onCylinderClick({ object: cylinder, location: { x, z }, category });
+    if (typeof this.#event.onCylinderClick === "function") {
+      this.#event.onCylinderClick({
+        object: cylinder,
+        location: { x, z },
+        category,
+      });
     }
   }
 
