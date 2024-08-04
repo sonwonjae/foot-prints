@@ -1,5 +1,5 @@
 import type { Middleware } from "@/middlewares/pages/type";
-import type { LandTypeXYZReq } from "@/pages/land/[x]/[y]/[z]/types/page.types";
+import type { LandTypeXYZReq } from "@/pages/land/[x]/[y]/[z]/src/types/page.types";
 
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";

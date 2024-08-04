@@ -1,14 +1,15 @@
-import type { LandTypeXReq } from "@/pages/land/[x]/types/page.types";
+import type { LandTypeXYZWriteReq } from "@/pages/land/[x]/[y]/[z]/write/src/types/page.types";
 import type { ServerResponse } from "http";
 
 import { createRouter } from "next-connect";
 
 import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
-import { checkLand } from "@/middlewares/pages/land/checker";
 import { pipe } from "@/middlewares/pages/utils/pipe";
 
-const router = createRouter<LandTypeXReq, ServerResponse>();
+import { checkAuth } from "./auth";
 
-router.get(pipe<LandTypeXReq>(checkLand));
+const router = createRouter<LandTypeXYZWriteReq, ServerResponse>();
+
+router.get(pipe<LandTypeXYZWriteReq>(checkAuth));
 
 export const middleware = makeGetServerSideProps(router);

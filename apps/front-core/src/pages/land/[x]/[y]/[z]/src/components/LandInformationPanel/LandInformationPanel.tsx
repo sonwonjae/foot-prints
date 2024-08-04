@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { LandTypeXYZParams } from "@/pages/land/[x]/[y]/[z]/types/page.types";
+import { LandTypeXYZParams } from "@/pages/land/[x]/[y]/[z]/src/types/page.types";
 import { cn } from "@/utils/tailwindcss";
 
 function LandInformationPanel() {

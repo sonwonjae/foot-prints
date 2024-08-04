@@ -1,4 +1,4 @@
-import { middleware } from "./middleware";
+import { middleware } from "./src/middleware";
 
 export const getServerSideProps = middleware;
 

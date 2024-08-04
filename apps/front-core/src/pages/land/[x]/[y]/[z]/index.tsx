@@ -2,9 +2,9 @@ import { HydrationBoundary } from "@tanstack/react-query";
 
 import { cn } from "@/utils/tailwindcss";
 
-import { ArticleList, LandInformationPanel } from "./components";
-import { middleware } from "./middleware";
-import { LandTypeXYZPageProps } from "./types/page.types";
+import { ArticleList, LandInformationPanel } from "./src/components";
+import { middleware } from "./src/middleware";
+import { LandTypeXYZPageProps } from "./src/types/page.types";
 
 export const getServerSideProps = middleware;
 

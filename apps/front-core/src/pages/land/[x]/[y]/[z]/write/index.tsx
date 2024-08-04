@@ -1,7 +1,10 @@
 import { Tiptap } from "@/tiptap/components";
 import { cn } from "@/utils/tailwindcss";
 
-export default function ArticleWritePage() {
+import { middleware } from "./src/middleware";
+export const getServerSideProps = middleware;
+
+export default function LandTypeXYZWritePage() {
   return (
     <div
       className={cn(

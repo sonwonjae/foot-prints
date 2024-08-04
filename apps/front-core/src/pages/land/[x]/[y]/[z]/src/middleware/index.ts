@@ -1,7 +1,7 @@
 import type {
   LandTypeXYZPageProps,
   LandTypeXYZReq,
-} from "@/pages/land/[x]/[y]/[z]/types/page.types";
+} from "@/pages/land/[x]/[y]/[z]/src/types/page.types";
 import type { ServerResponse } from "http";
 
 import { createRouter } from "next-connect";
