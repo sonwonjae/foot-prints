@@ -14,6 +14,7 @@ export const checkAuth: Middleware<LandTypeXYZWriteReq> = async (req) => {
   } catch (err) {
     return {
       redirect: {
+        /** TODO: pathname을 봐서 이전 좌표로 돌려보내기 */
         destination: "/",
         permanent: false,
       },

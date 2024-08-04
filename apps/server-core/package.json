@@ -28,6 +28,7 @@
     "@nestjs/swagger": "^7.3.1",
     "@supabase/supabase-js": "^2.43.2",
     "axios": "^1.7.2",
+    "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
     "octokit": "^3.1.2",
     "reflect-metadata": "^0.2.0",

@@ -1,15 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { Tables } from 'src/supabase/supabase.types';
 
 @Injectable()
 export class LocationsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  create(createLocationDto: CreateLocationDto) {
-    console.log({ createLocationDto });
-    return 'This action adds a new location';
+  async create(createLocationDto: CreateLocationDto, user: Tables<'users'>) {
+    const { x, z } = createLocationDto;
+
+    const supabase = this.supabaseService.getClient();
+
+    const { data: location } = await supabase
+      .from('locations')
+      .select('id')
+      .eq('x', x)
+      .eq('z', z)
+      .single();
+
+    /** NOTE: 생성하기 전에 location을 개척한 사람이 있는지 확인 */
+    const { data: otherUserLocation } = await supabase
+      .from('users__locations')
+      .select('*')
+      .eq('locationId', location.id);
+
+    /** NOTE: location을 개척한 사람이 이미 있다면 에러 반환 */
+    if (!!otherUserLocation.length) {
+      throw new ForbiddenException();
+    }
+
+    const { data: userLocation } = await supabase
+      .from('users__locations')
+      .insert({ locationId: location.id, userId: user.id })
+      .select('*')
+      .single();
+
+    if (!userLocation) {
+      throw new ForbiddenException();
+    }
+
+    return true;
   }
 
   findAll() {
@@ -41,8 +73,35 @@ export class LocationsService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} location`;
+  /** TODO: 고도화 필요 */
+  async findOne(
+    /** FIXME: type number로 강제하는 법 찾은 뒤 수정 */
+    { x, z }: { x: string; z: string },
+  ) {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: location } = await supabase
+      .from('locations')
+      .select('id')
+      .eq('x', Number(x))
+      .eq('z', Number(z))
+      .single();
+
+    const { data: userLocation } = await supabase
+      .from('users__locations')
+      .select('*')
+      .eq('locationId', location.id)
+      .single();
+
+    if (userLocation) {
+      return {
+        type: 'mine-location' as const,
+      };
+    }
+
+    return {
+      type: 'empty' as const,
+    };
   }
 
   update(id: number, updateLocationDto: UpdateLocationDto) {

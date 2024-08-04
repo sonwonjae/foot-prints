@@ -15,13 +15,19 @@ export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
     range: req.query.range,
   })}`;
 
-  const locationQuery = makeGetQueryOptions({
-    url: `/api/locations/${Number(x)}/${Number(z)}${queryString}`,
+  const locationListQuery = makeGetQueryOptions({
+    url: `/api/locations/list/${Number(x)}/${Number(z)}${queryString}`,
   });
-  const queryOptions = locationQuery.getQueryOptionsInServer();
+  const locationListQueryOptions = locationListQuery.getQueryOptionsInServer();
+
+  const locationQuery = makeGetQueryOptions({
+    url: `/api/locations/${Number(x)}/${Number(z)}`,
+  });
+  const locationQueryOptions = locationQuery.getQueryOptionsInServer();
 
   try {
-    await queryClient.prefetchQuery(queryOptions);
+    await queryClient.prefetchQuery(locationListQueryOptions);
+    await queryClient.prefetchQuery(locationQueryOptions);
   } catch (err) {
     const error = err as AxiosError;
 

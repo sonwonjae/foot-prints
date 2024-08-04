@@ -23,8 +23,18 @@ export interface GetQueryOptions<TQueryFnData> {
 
 export interface MakeGetQueryOptions {
   <
-    TQueryFnData extends Article[] = Article[],
+    TQueryFnData extends Article = Article,
     Url extends string = `/api/locations/${number}/${number}`,
+  >(param: {
+    url: Url;
+  }): {
+    readonly baseKey: readonly [Url, Method];
+    getQueryOptionsInClient: GetQueryOptions<TQueryFnData>;
+    getQueryOptionsInServer: GetQueryOptions<TQueryFnData>;
+  };
+  <
+    TQueryFnData extends Article[] = Article[],
+    Url extends string = `/api/locations/list/${number}/${number}`,
   >(param: {
     url: Url;
   }): {

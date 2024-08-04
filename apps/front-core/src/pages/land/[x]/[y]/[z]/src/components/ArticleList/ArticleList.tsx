@@ -22,11 +22,11 @@ function ArticleList({
     range: router.query.range,
   })}`;
 
-  const locationQuery = makeGetQueryOptions({
-    url: `/api/locations/${Number(router.query.x)}/${Number(router.query.z)}${queryString}`,
+  const locationListQuery = makeGetQueryOptions({
+    url: `/api/locations/list/${Number(router.query.x)}/${Number(router.query.z)}${queryString}`,
   });
   const { data: locationList } = useQuery(
-    locationQuery.getQueryOptionsInClient(),
+    locationListQuery.getQueryOptionsInClient(),
   );
 
   const onCylinderClick: OnCylinderClick = ({ location }) => {
@@ -79,7 +79,7 @@ function ArticleList({
   }, [
     $canvasRef.current,
     !!articleMap,
-    locationQuery.baseKey,
+    locationListQuery.baseKey,
     router.query.range,
   ]);
 
@@ -94,7 +94,7 @@ function ArticleList({
   }, [
     $canvasRef.current,
     !!articleMap,
-    locationQuery.baseKey,
+    locationListQuery.baseKey,
     router.query.range,
   ]);
 

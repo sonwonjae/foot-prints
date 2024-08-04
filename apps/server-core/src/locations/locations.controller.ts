@@ -11,14 +11,19 @@ import {
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { User } from 'src/users/users.decorator';
+import { Tables } from 'src/supabase/supabase.types';
 
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Post()
-  create(@Body() createLocationDto: CreateLocationDto) {
-    return this.locationsService.create(createLocationDto);
+  create(
+    @Body() createLocationDto: CreateLocationDto,
+    @User() user: Tables<'users'>,
+  ) {
+    return this.locationsService.create(createLocationDto, user);
   }
 
   @Get()
@@ -26,7 +31,7 @@ export class LocationsController {
     return this.locationsService.findAll();
   }
 
-  @Get(':x/:z')
+  @Get('list/:x/:z')
   findLocationListPagination(
     @Param() param: { x: string; z: string },
     @Query() query: { range: string },
@@ -34,9 +39,9 @@ export class LocationsController {
     return this.locationsService.findLocationListPagination(param, query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.locationsService.findOne(+id);
+  @Get(':x/:z')
+  findOne(@Param() param: { x: string; z: string }) {
+    return this.locationsService.findOne(param);
   }
 
   @Patch(':id')
