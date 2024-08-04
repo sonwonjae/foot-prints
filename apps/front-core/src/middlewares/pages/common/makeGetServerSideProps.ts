@@ -10,7 +10,7 @@ export const makeGetServerSideProps = <PageProps extends object, Router>(
     params,
   }) => {
     /** NOTE: create dummy url for req.query & req.pathname */
-    const DUMMY_URL = new URL(`http://dummy:5000${req.url ?? ""}`);
+    const DUMMY_URL = new URL(`http://dummy:5001${req.url ?? ""}`);
 
     /** FIXME: type으로 제어할 수 있게 수정가능하다면 수정 시도하기 */
     // @ts-expect-error: attach params to req.params
