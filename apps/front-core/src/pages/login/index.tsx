@@ -1,6 +1,23 @@
-import type { GetServerSideProps } from "next";
+import type { CustomIncomingMessage, Params } from "@/middlewares/pages/type";
+import type { ServerResponse } from "http";
 
-import { dehydrate, QueryClient } from "@tanstack/react-query";
+import { createRouter } from "next-connect";
+
+import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
+
+interface LoginParams extends Params {}
+
+const router = createRouter<
+  CustomIncomingMessage<LoginParams>,
+  ServerResponse
+>();
+
+router.get(async () => {
+  console.log("hello login");
+  return { props: {} };
+});
+
+export const getServerSideProps = makeGetServerSideProps(router);
 
 export default function Page() {
   const gitHubLogin = () => {
@@ -20,9 +37,3 @@ export default function Page() {
     </div>
   );
 }
-
-export const getServerSideProps = (async () => {
-  const queryClient = new QueryClient();
-
-  return { props: { dehydratedState: dehydrate(queryClient) } };
-}) satisfies GetServerSideProps;
