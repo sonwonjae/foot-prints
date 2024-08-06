@@ -39,8 +39,9 @@ export class LocationsController {
   findLocationListPagination(
     @Param() param: GetLocationParamDto,
     @Query() query: GetLocationQueryDto,
+    @User() user: Tables<'users'>,
   ) {
-    return this.locationsService.findLocationListPagination(param, query);
+    return this.locationsService.findLocationListPagination(param, query, user);
   }
 
   @Get(':x/:z')

@@ -55,19 +55,38 @@ export class LocationsService {
   async findLocationListPagination(
     { x, z }: GetLocationParamDto,
     { range }: GetLocationQueryDto,
+    user: Tables<'users'>,
   ) {
     const supabase = this.supabaseService.getClient();
 
     const { data: locations } = await supabase
       .from('locations')
-      .select('*')
+      .select(
+        `*, 
+        users__locations ( userId )
+        `,
+      )
       .gte('x', x - range)
       .lte('x', x + range)
       .gte('z', z - range)
       .lte('z', z + range);
 
-    return locations.map((location) => {
+    return (locations || []).map((location) => {
+      /** NOTE: users__locations는 무조건 하나만 존재해야 함 */
+      const { userId } = location.users__locations?.[0] || {};
+
+      if (user?.id && userId && user.id === userId) {
+        return {
+          type: 'mine-location' as const,
+          location: {
+            x: location.x,
+            z: location.z,
+          },
+        };
+      }
+
       return {
+        type: 'empty' as const,
         location: {
           x: location.x,
           z: location.z,

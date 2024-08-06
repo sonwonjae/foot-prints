@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { AuthMiddleware } from 'src/auth/auth.middleware';
+import { RequiredAuthMiddleware } from 'src/auth/auth.middleware';
 
 import { FootPrintsService } from './foot-prints.service';
 import { FootPrintsController } from './foot-prints.controller';
@@ -12,6 +12,6 @@ import { FootPrintsController } from './foot-prints.controller';
 })
 export class FootPrintsModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes(FootPrintsController);
+    consumer.apply(RequiredAuthMiddleware).forRoutes(FootPrintsController);
   }
 }

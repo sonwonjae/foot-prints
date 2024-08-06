@@ -12,9 +12,13 @@ function LandInformationPanel() {
     url: `/api/locations/${Number(router.query.x)}/${Number(router.query.z)}`,
   });
 
-  const { data: location, isLoading: isLocationLoading } = useQuery(
-    locationQuery.getQueryOptionsInClient(),
-  );
+  const {
+    data: location,
+    isLoading: isLocationLoading,
+    isFetching,
+  } = useQuery(locationQuery.getQueryOptionsInClient());
+
+  console.log({ isLocationLoading, isFetching });
 
   const { mutateAsync: pioneerLocation } = useMutation({
     mutationFn: async () => {
@@ -65,8 +69,11 @@ function LandInformationPanel() {
       {/* <Button>[category] 방문하기</Button> */}
       {/* TODO: loading ui 추가 - to shadcn */}
       <Button onClick={moveUnit} disabled={isLocationLoading}>
-        {location?.type === "mine-location" && "마저 발자취 남기기"}
-        {location?.type === "empty" && "개척하기"}
+        {isLocationLoading && "땅 탐색 중..."}
+        {!isLocationLoading &&
+          location?.type === "mine-location" &&
+          "마저 발자취 남기기"}
+        {!isLocationLoading && location?.type === "empty" && "개척하기"}
       </Button>
     </div>
   );

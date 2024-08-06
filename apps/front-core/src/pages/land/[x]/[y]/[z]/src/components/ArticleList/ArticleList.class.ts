@@ -158,18 +158,46 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     };
   }
 
-  addCylinderInScene({ location, category, height }: CylinderType) {
+  addCylinderInScene({ location, category, height, type }: CylinderType) {
     const { x, z } = location;
 
-    const color = category ? convertStringToHexColor(category) : "#FFFFFF";
+    const finalColor = (() => {
+      switch (true) {
+        case type === "mine-location":
+          /** FIXME: 어느정도 기능 마무리 된 후 mine-location unit UI 고도화 하기 */
+          return "#E6E6FA";
+        case !!category:
+          return convertStringToHexColor(category);
+        case type === "empty":
+        default:
+          return "#FFFFFF";
+      }
+    })();
+
+    const finalHeight = (() => {
+      switch (true) {
+        case type === "mine-location":
+          /** FIXME: 어느정도 기능 마무리 된 후 mine-location unit UI 고도화 하기 */
+          return 0.8;
+        case type === "empty":
+          return 0.4;
+        default:
+          return height;
+      }
+    })();
+
     const minHeight = 0.4;
     const maxHeight = 3;
-    const limitedHeight = Math.min(maxHeight, Math.max(minHeight, height ?? 0));
+
+    const limitedHeight = Math.min(
+      maxHeight,
+      Math.max(minHeight, finalHeight ?? 0),
+    );
 
     const cylinder = createCylinder(this.#scene, {
       x,
       z,
-      color,
+      color: finalColor,
       height: limitedHeight,
     });
 
@@ -177,7 +205,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       cylinder,
       x,
       z,
-      color,
+      color: finalColor,
       category,
     });
     if (category) {

@@ -10,6 +10,8 @@ declare global {
 
 export type Cateogry = Nullable<string>;
 
+export type UnitType = "mine-location" | "empty";
+
 export interface Article {
   location: {
     x: number;
@@ -17,6 +19,7 @@ export interface Article {
   };
   category?: Cateogry;
   height?: number /** FIXME: 이거 나중에 조회수로 바꿔야 함 */;
+  type: UnitType;
 }
 
 export interface ArticleMap {
@@ -88,6 +91,7 @@ export interface DefaultCylinderType {
   location: { x: number; z: number };
   category?: Nullable<string>;
   height?: number;
+  type: UnitType;
 }
 
 export interface CylinderMapConstructorParam<CylinderType> {
