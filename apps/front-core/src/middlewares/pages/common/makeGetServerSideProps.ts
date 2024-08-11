@@ -1,5 +1,7 @@
+import { parse } from "url";
+
 import { GetServerSideProps, GetServerSidePropsResult } from "next";
-import QueryString from "qs";
+import QueryString from "query-string";
 
 import { apiAxios } from "@/utils/react-query";
 
@@ -10,9 +12,10 @@ export const makeGetServerSideProps = <PageProps extends object, Router>(
     req,
     res,
     params,
+    resolvedUrl,
   }) => {
-    /** NOTE: create dummy url for req.query */
-    const DUMMY_URL = new URL(`http://dummy:5001${req.url ?? ""}`);
+    // @ts-expect-error: attach pathname to req.pathname
+    req.pathname = parse(resolvedUrl).pathname;
 
     /** FIXME: type으로 제어할 수 있게 수정가능하다면 수정 시도하기 */
     // @ts-expect-error: attach params to req.params
@@ -20,7 +23,7 @@ export const makeGetServerSideProps = <PageProps extends object, Router>(
 
     /** FIXME: type으로 제어할 수 있게 수정가능하다면 수정 시도하기 */
     // @ts-expect-error: attach query to req.query
-    req.query = QueryString.parse(DUMMY_URL.search.replace(/^\?/, ""));
+    req.query = QueryString.parse(parse(req.url).query);
 
     /** NOTE: next serverside req에는 cookie가 안 담기기 때문에 강제 cookie 주입 */
     apiAxios.defaults.headers.Cookie = req.headers.cookie!;

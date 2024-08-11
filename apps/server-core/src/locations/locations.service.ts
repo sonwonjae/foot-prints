@@ -12,8 +12,8 @@ import {
 export class LocationsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async create(createLocationDto: CreateLocationDto, user: Tables<'users'>) {
-    const { x, z } = createLocationDto;
+  async create(body: CreateLocationDto, user: Tables<'users'>) {
+    const { x, z } = body;
 
     const supabase = this.supabaseService.getClient();
 
@@ -25,13 +25,13 @@ export class LocationsService {
       .single();
 
     /** NOTE: 생성하기 전에 location을 개척한 사람이 있는지 확인 */
-    const { data: otherUserLocation } = await supabase
+    const { data: anyUserLocation } = await supabase
       .from('users__locations')
       .select('*')
       .eq('locationId', location.id);
 
     /** NOTE: location을 개척한 사람이 이미 있다면 에러 반환 */
-    if (!!otherUserLocation.length) {
+    if (!!anyUserLocation.length) {
       throw new ForbiddenException();
     }
 
@@ -66,23 +66,33 @@ export class LocationsService {
         users__locations ( userId )
         `,
       )
-      .gte('x', x - range)
-      .lte('x', x + range)
-      .gte('z', z - range)
-      .lte('z', z + range);
+      .gte('x', x - Math.floor(range / 2))
+      .lte('x', x + Math.floor(range / 2))
+      .gte('z', z - Math.floor(range / 2))
+      .lte('z', z + Math.floor(range / 2));
 
     return (locations || []).map((location) => {
       /** NOTE: users__locations는 무조건 하나만 존재해야 함 */
       const { userId } = location.users__locations?.[0] || {};
 
-      if (user?.id && userId && user.id === userId) {
-        return {
-          type: 'mine-location' as const,
-          location: {
-            x: location.x,
-            z: location.z,
-          },
-        };
+      if (userId) {
+        if (user?.id === userId) {
+          return {
+            type: 'mine-location' as const,
+            location: {
+              x: location.x,
+              z: location.z,
+            },
+          };
+        } else {
+          return {
+            type: 'other-user-location' as const,
+            location: {
+              x: location.x,
+              z: location.z,
+            },
+          };
+        }
       }
 
       return {
@@ -95,8 +105,7 @@ export class LocationsService {
     });
   }
 
-  /** TODO: 고도화 필요 */
-  async findOne({ x, z }: GetLocationParamDto) {
+  async findOne({ x, z }: GetLocationParamDto, user?: Tables<'users'>) {
     const supabase = this.supabaseService.getClient();
 
     const { data: location } = await supabase
@@ -112,10 +121,18 @@ export class LocationsService {
       .eq('locationId', location.id)
       .single();
 
+    console.log({ userLocation, user });
+
     if (userLocation) {
-      return {
-        type: 'mine-location' as const,
-      };
+      if (userLocation.userId === user?.id) {
+        return {
+          type: 'mine-location' as const,
+        };
+      } else {
+        return {
+          type: 'other-user-location' as const,
+        };
+      }
     }
 
     return {

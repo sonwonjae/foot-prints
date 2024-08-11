@@ -21,6 +21,11 @@ export class LocationsModule {
     });
 
     consumer.apply(OptionalAuthMiddleware).forRoutes({
+      path: 'locations/:x/:z',
+      method: RequestMethod.GET,
+    });
+
+    consumer.apply(OptionalAuthMiddleware).forRoutes({
       path: 'locations/list/:x/:z',
       method: RequestMethod.GET,
     });

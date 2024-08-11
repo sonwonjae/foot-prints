@@ -10,7 +10,7 @@ declare global {
 
 export type Cateogry = Nullable<string>;
 
-export type UnitType = "mine-location" | "empty";
+export type UnitType = "mine-location" | "other-user-location" | "empty";
 
 export interface Article {
   location: {
@@ -33,7 +33,7 @@ export interface ArticleMap {
       >;
       color: `#${string}`;
       category: Cateogry;
-      progress: number;
+      height: number;
     };
   };
 }
@@ -44,7 +44,7 @@ export interface CategoryMap {
     z: number;
     cylinder: Cylinder;
     height: number;
-    progress: number;
+    // progress: number;
   }>;
 }
 
@@ -60,10 +60,42 @@ export interface CylinderLocation {
 }
 
 interface TargetCylinderLocation extends CylinderLocation {
-  progress: number;
+  // progress: number;
   cameraStartLocation: CylinderLocation;
   controlsStartLocation: CylinderLocation;
 }
+
+type EasingFunctionType = "easy-in" | "easy-out";
+
+type AnimationTask =
+  | {
+      type: "camera-move";
+      location: CylinderLocation;
+      duration: number;
+      progress: number;
+      easingFuncionType: EasingFunctionType;
+      isKill?: boolean;
+      cameraStartLocation: CylinderLocation;
+      controlsStartLocation: CylinderLocation;
+    }
+  | {
+      type: "cylinder-category-hover";
+      direct: "up" | "down";
+      targetCategory: string;
+      location: CylinderLocation;
+      duration: number;
+      progress: number;
+      isKill?: boolean;
+      easingFuncionType?: undefined;
+    }
+  | {
+      type: "cylinder-create";
+      location: CylinderLocation;
+      duration: number;
+      progress: number;
+      easingFuncionType: EasingFunctionType;
+      isKill?: boolean;
+    };
 
 export interface CylinderMapStore<CylinderType> {
   currentSelectedCylinder: Nullable<Cylinder>;
@@ -73,6 +105,7 @@ export interface CylinderMapStore<CylinderType> {
   categoryMap: CategoryMap;
   targetCylinderLocation: Nullable<TargetCylinderLocation>;
   cylinderList: Array<CylinderType>;
+  animationMultiThread: Array<AnimationTask>;
 }
 
 export interface OnCylinderClick {
@@ -108,6 +141,7 @@ export interface UpdateCylinderMapParam {
   z: number;
   color: `#${string}`;
   category?: Cateogry;
+  height: number;
 }
 
 export interface UpdateCategoryMapParam {

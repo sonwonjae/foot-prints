@@ -3,7 +3,10 @@ import type { AppProps } from "next/app";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { FootprintsIcon } from "lucide-react";
 import { useState } from "react";
+
+import { Toaster } from "@/shad-cn/components/ui/sonner";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => {
@@ -20,8 +23,14 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-left" />
       <Component {...pageProps} />
+      <Toaster
+        position="top-right"
+        icons={{
+          success: <FootprintsIcon />,
+        }}
+      />
     </QueryClientProvider>
   );
 }

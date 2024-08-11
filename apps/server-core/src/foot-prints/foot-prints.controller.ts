@@ -18,19 +18,14 @@ import { GetFootPrintParamDto } from './dto/get-foot-print.dto';
 export class FootPrintsController {
   constructor(private readonly footPrintsService: FootPrintsService) {}
 
-  @Post()
-  create(@Body() createFootPrintDto: CreateFootPrintDto) {
-    return this.footPrintsService.create(createFootPrintDto);
-  }
-
   @Get()
   findAll() {
     return this.footPrintsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.footPrintsService.findOne(+id);
+  @Get('article/:x/:z')
+  findOne(@Param() param: GetFootPrintParamDto, @User() user: Tables<'users'>) {
+    return this.footPrintsService.getArticle(param, user);
   }
 
   @Get('auth/:x/:z')
@@ -46,12 +41,14 @@ export class FootPrintsController {
     return this.footPrintsService.checkExist(param);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateFootPrintDto: UpdateFootPrintDto,
-  ) {
-    return this.footPrintsService.update(+id, updateFootPrintDto);
+  @Post()
+  create(@Body() body: CreateFootPrintDto, @User() user: Tables<'users'>) {
+    return this.footPrintsService.create(body, user);
+  }
+
+  @Patch()
+  update(@Body() body: UpdateFootPrintDto, @User() user: Tables<'users'>) {
+    return this.footPrintsService.update(body, user);
   }
 
   @Delete(':id')

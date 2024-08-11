@@ -48,10 +48,26 @@ const checkLandQuery = pipe<Req>(
     defaultSingleQuery: "5",
     validationMap: {
       5: true,
+      9: true,
       15: true,
       25: true,
     },
   }),
 );
 
-export const checkLand = pipe<Req>(checkLandLocationType, checkLandQuery);
+export const checkLand = pipe<Req>(
+  () => {
+    console.log("come in 3");
+    return { props: {} };
+  },
+  checkLandLocationType,
+  () => {
+    console.log("come in 4");
+    return { props: {} };
+  },
+  checkLandQuery,
+  () => {
+    console.log("come in 5");
+    return { props: {} };
+  },
+);

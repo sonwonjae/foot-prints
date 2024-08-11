@@ -23,11 +23,8 @@ export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Post()
-  create(
-    @Body() createLocationDto: CreateLocationDto,
-    @User() user: Tables<'users'>,
-  ) {
-    return this.locationsService.create(createLocationDto, user);
+  create(@Body() body: CreateLocationDto, @User() user: Tables<'users'>) {
+    return this.locationsService.create(body, user);
   }
 
   @Get()
@@ -45,8 +42,8 @@ export class LocationsController {
   }
 
   @Get(':x/:z')
-  findOne(@Param() param: GetLocationParamDto) {
-    return this.locationsService.findOne(param);
+  findOne(@Param() param: GetLocationParamDto, @User() user?: Tables<'users'>) {
+    return this.locationsService.findOne(param, user);
   }
 
   @Patch(':id')

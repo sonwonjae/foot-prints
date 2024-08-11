@@ -16,7 +16,21 @@ import StarterKit from "@tiptap/starter-kit";
 
 import { cn } from "@/utils/tailwindcss";
 
-function Tiptap({ className = "" }) {
+interface TiptapProps {
+  value: string;
+  onChange: (params: { html: string }) => void;
+  className: string;
+  placeholder: string;
+  editable?: boolean;
+}
+
+function Tiptap({
+  value = "",
+  onChange = () => {},
+  className = "",
+  placeholder = "",
+  editable = false,
+}: TiptapProps) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -26,7 +40,7 @@ function Tiptap({ className = "" }) {
       Image,
       Paragraph,
       Placeholder.configure({
-        placeholder: "Write something …",
+        placeholder,
       }),
       Text,
       TaskList,
@@ -46,13 +60,16 @@ function Tiptap({ className = "" }) {
         ),
       },
     },
-    content: "",
-    editable: true,
+    content: value,
+    onUpdate: ({ editor }) => {
+      onChange({ html: editor.getHTML() });
+    },
+    editable,
   });
 
   return (
     <>
-      <EditorContent editor={editor} className={cn(className)} />
+      <EditorContent editor={editor} className={cn("w-full", className)} />
       {/* {editor && (
           <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
             <div className="bubble-menu">

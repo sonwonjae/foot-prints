@@ -4,7 +4,7 @@ import axios, { AxiosError } from "axios";
 
 export const apiAxios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_SERVER_HOST,
-  timeout: 1000,
+  timeout: 1000 * 60,
   withCredentials: true,
 });
 

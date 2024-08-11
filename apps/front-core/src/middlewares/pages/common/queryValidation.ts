@@ -4,7 +4,7 @@ import type {
   CustomIncomingMessage,
 } from "@/middlewares/pages/type";
 
-import QueryString from "qs";
+import QueryString from "query-string";
 
 export const checkSingleQuery = <
   Req extends CustomIncomingMessage & { query: Query },
@@ -102,8 +102,8 @@ export const checkSingleQuery = <
 
       return {
         redirect: {
-          destination: `${validQueryString}`,
-          permanent: false,
+          destination: `${req.pathname}${validQueryString}`,
+          permanent: true,
         },
       };
     }

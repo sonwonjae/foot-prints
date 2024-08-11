@@ -3,7 +3,7 @@ import type { LandTypeXYZReq } from "@/pages/land/[x]/[y]/[z]/src/types/page.typ
 
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import QueryString from "qs";
+import QueryString from "query-string";
 
 import { makeGetQueryOptions } from "@/utils/react-query";
 

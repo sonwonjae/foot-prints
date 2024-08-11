@@ -13,8 +13,8 @@ export const resize = ({
   camera: THREE.PerspectiveCamera;
 }) => {
   if (resizeRendererToDisplaySize(renderer)) {
-    const $canvas = renderer.domElement;
-    camera.aspect = $canvas.clientWidth / $canvas.clientHeight;
+    // const $canvas = renderer.domElement;
+    // camera.aspect = $canvas.clientWidth / $canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
 };
@@ -29,10 +29,11 @@ export const createRenderer = ({ $canvas }: { $canvas: HTMLCanvasElement }) => {
 };
 
 export const initCamera = ({ $canvas }: { $canvas: HTMLCanvasElement }) => {
-  const fov = 75;
+  const fov = 50;
   const aspect = $canvas.clientWidth / $canvas.clientHeight;
   const near = 1;
   const far = 1000;
+
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
   return camera;
@@ -58,7 +59,7 @@ export const initControls = ({
   controls.enableRotate = false;
 
   controls.maxPolarAngle = Math.PI / 2;
-  controls.enableZoom = false;
+  // controls.enableZoom = false;
 
   return controls;
 };

@@ -17,6 +17,7 @@ export type CustomIncomingMessage<
 > = IncomingMessage & {
   params?: TParams;
   query: TQuery;
+  pathname: string;
 };
 
 export type Middleware<

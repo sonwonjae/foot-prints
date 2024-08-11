@@ -1,14 +1,14 @@
 import type { CustomIncomingMessage, Params } from "@/middlewares/pages/type";
 import type { DehydratedState } from "@tanstack/react-query";
 
-export interface LandTypeXYZWriteParams extends Params {
+export interface LandTypeXYZReadParams extends Params {
   x: string;
   y: string;
   z: string;
 }
 
-export type LandTypeXYZWriteReq = CustomIncomingMessage<LandTypeXYZWriteParams>;
+export type LandTypeXYZReadReq = CustomIncomingMessage<LandTypeXYZReadParams>;
 
-export interface LandTypeXYZWritePageProps {
+export interface LandTypeXYZReadPageProps {
   dehydratedState: DehydratedState;
 }

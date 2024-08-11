@@ -9,13 +9,10 @@ import { createRouter } from "next-connect";
 import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServerSideProps";
 import { pipe } from "@/middlewares/pages/utils/pipe";
 
-import { checkAuth } from "./auth";
 import { prefetch } from "./prefetch";
 
 const router = createRouter<LandTypeXYZWriteReq, ServerResponse>();
 
-router.get(
-  pipe<LandTypeXYZWriteReq, LandTypeXYZWritePageProps>(checkAuth, prefetch),
-);
+router.get(pipe<LandTypeXYZWriteReq, LandTypeXYZWritePageProps>(prefetch));
 
 export const middleware = makeGetServerSideProps(router);

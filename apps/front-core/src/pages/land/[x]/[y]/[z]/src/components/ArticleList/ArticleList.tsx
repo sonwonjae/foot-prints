@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import QueryString from "qs";
+import QueryString from "query-string";
 import { useRef, useEffect, useState } from "react";
 
 import { makeGetQueryOptions } from "@/utils/react-query";
@@ -77,7 +77,7 @@ function ArticleList({
     articleMap.updateState({
       cylinderList: locationList,
     });
-    // articleMap.drawCylinderList();
+    articleMap.drawCylinderList();
   }, [
     $canvasRef.current,
     !!articleMap,
