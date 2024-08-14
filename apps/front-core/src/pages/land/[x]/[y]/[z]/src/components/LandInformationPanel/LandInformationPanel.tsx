@@ -42,7 +42,6 @@ function LandInformationPanel() {
     }
 
     if (location?.type === "other-user-location") {
-      console.log("click to read");
       router.push(`${window.location.pathname}/read`);
       return;
     }
@@ -50,7 +49,6 @@ function LandInformationPanel() {
     if (location?.type === "empty") {
       await pioneerLocation();
     }
-    console.log("click to write");
     router.push(`${window.location.pathname}/write`);
   };
 

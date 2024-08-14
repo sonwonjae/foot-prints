@@ -13,8 +13,7 @@ export class FootPrintsService {
     return `This action returns all footPrints`;
   }
 
-  async getArticle({ x, z }: GetFootPrintParamDto, user?: Tables<'users'>) {
-    console.log({ user });
+  async getArticle({ x, z }: GetFootPrintParamDto) {
     const supabase = this.supabaseService.getClient();
 
     const { data: location } = await supabase

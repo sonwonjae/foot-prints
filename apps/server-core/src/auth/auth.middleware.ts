@@ -139,8 +139,6 @@ export class OptionalAuthMiddleware implements NestMiddleware {
     const accessToken = req.cookies[this.ACCESS_TOKEN_NAME] as string;
     const refreshToken = req.cookies[this.REFRESH_TOKEN_NAME] as string;
 
-    console.log({ accessToken, refreshToken });
-
     const supabase = this.supabaseService.getClient();
 
     if (accessToken) {

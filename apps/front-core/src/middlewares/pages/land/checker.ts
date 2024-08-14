@@ -57,17 +57,14 @@ const checkLandQuery = pipe<Req>(
 
 export const checkLand = pipe<Req>(
   () => {
-    console.log("come in 3");
     return { props: {} };
   },
   checkLandLocationType,
   () => {
-    console.log("come in 4");
     return { props: {} };
   },
   checkLandQuery,
   () => {
-    console.log("come in 5");
     return { props: {} };
   },
 );

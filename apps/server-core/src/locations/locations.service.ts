@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
-import { UpdateLocationDto } from './dto/update-location.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Tables } from 'src/supabase/supabase.types';
 import {
@@ -121,8 +120,6 @@ export class LocationsService {
       .eq('locationId', location.id)
       .single();
 
-    console.log({ userLocation, user });
-
     if (userLocation) {
       if (userLocation.userId === user?.id) {
         return {
@@ -140,8 +137,7 @@ export class LocationsService {
     };
   }
 
-  update(id: number, updateLocationDto: UpdateLocationDto) {
-    console.log({ updateLocationDto });
+  update(id: number) {
     return `This action updates a #${id} location`;
   }
 

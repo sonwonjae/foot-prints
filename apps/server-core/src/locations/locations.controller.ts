@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
-import { UpdateLocationDto } from './dto/update-location.dto';
 import { User } from 'src/users/users.decorator';
 import { Tables } from 'src/supabase/supabase.types';
 import {
@@ -47,11 +46,8 @@ export class LocationsController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateLocationDto: UpdateLocationDto,
-  ) {
-    return this.locationsService.update(+id, updateLocationDto);
+  update(@Param('id') id: string) {
+    return this.locationsService.update(+id);
   }
 
   @Delete(':id')

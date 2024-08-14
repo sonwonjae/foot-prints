@@ -13,7 +13,6 @@ const router = createRouter<
 >();
 
 router.get(async () => {
-  console.log("hello login");
   return { props: {} };
 });
 

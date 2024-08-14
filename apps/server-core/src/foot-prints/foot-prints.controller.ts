@@ -24,8 +24,8 @@ export class FootPrintsController {
   }
 
   @Get('article/:x/:z')
-  findOne(@Param() param: GetFootPrintParamDto, @User() user: Tables<'users'>) {
-    return this.footPrintsService.getArticle(param, user);
+  findOne(@Param() param: GetFootPrintParamDto) {
+    return this.footPrintsService.getArticle(param);
   }
 
   @Get('auth/:x/:z')
