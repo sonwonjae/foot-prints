@@ -9,6 +9,8 @@ import { makeGetQueryOptions } from "@/utils/react-query";
 
 export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
   const { x = "0", z = "0" } = req.params || {};
+  const { sx, sz } = req.query || {};
+
   const queryClient = new QueryClient();
 
   const queryString = `?${QueryString.stringify({
@@ -21,9 +23,13 @@ export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
   const locationListQueryOptions = locationListQuery.getQueryOptionsInServer();
 
   const locationQuery = makeGetQueryOptions({
-    url: `/api/locations/${Number(x)}/${Number(z)}`,
+    url: `/api/locations/${Number(sx)}/${Number(sz)}`,
   });
-  const locationQueryOptions = locationQuery.getQueryOptionsInServer();
+  const locationQueryOptions = locationQuery.getQueryOptionsInServer({
+    queryOptions: {
+      enabled: !Number.isNaN(Number(sx)) && !Number.isNaN(Number(sz)),
+    },
+  });
 
   try {
     await queryClient.prefetchQuery(locationListQueryOptions);

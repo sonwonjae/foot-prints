@@ -43,14 +43,31 @@ const checkLandLocationType: Middleware<Req> = async (req) => {
 };
 
 const checkLandQuery = pipe<Req>(
+  /** NOTE: 땅 범위 query */
   checkSingleQuery({
     queryName: "range",
-    defaultSingleQuery: "5",
+    defaultSingleQuery: 9,
     validationMap: {
       5: true,
       9: true,
       15: true,
       25: true,
+    },
+  }),
+  /** NOTE: 선택한 location x query */
+  checkSingleQuery({
+    queryName: "sx",
+    validationType: "number",
+    defaultSingleQuery: (req) => {
+      return req.params?.x ?? 0;
+    },
+  }),
+  /** NOTE: 선택한 location z query */
+  checkSingleQuery({
+    queryName: "sz",
+    validationType: "number",
+    defaultSingleQuery: (req) => {
+      return req.params?.z ?? 0;
     },
   }),
 );

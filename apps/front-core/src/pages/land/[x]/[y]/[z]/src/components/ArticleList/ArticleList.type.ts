@@ -70,7 +70,7 @@ type EasingFunctionType = "easy-in" | "easy-out";
 type AnimationTask =
   | {
       type: "camera-move";
-      location: CylinderLocation;
+      location: { x: number; y?: number; z: number };
       duration: number;
       progress: number;
       easingFuncionType: EasingFunctionType;
@@ -111,13 +111,18 @@ export interface CylinderMapStore<CylinderType> {
 export interface OnCylinderClick {
   (param: {
     object: Cylinder;
-    location: { x: number; z: number };
+    location: CylinderLocation;
     category: Nullable<string>;
   }): void;
 }
 
+export interface OnCameraMoveEnd {
+  (param: { location: CylinderLocation }): void;
+}
+
 export interface CylinderMapEvent {
   onCylinderClick: OnCylinderClick;
+  onCameraMoveEnd: OnCameraMoveEnd;
 }
 
 export interface DefaultCylinderType {
@@ -133,6 +138,7 @@ export interface CylinderMapConstructorParam<CylinderType> {
   bx?: number;
   bz?: number;
   onCylinderClick?: OnCylinderClick;
+  onCameraMoveEnd?: OnCameraMoveEnd;
 }
 
 export interface UpdateCylinderMapParam {

@@ -13,8 +13,8 @@ export const resize = ({
   camera: THREE.PerspectiveCamera;
 }) => {
   if (resizeRendererToDisplaySize(renderer)) {
-    // const $canvas = renderer.domElement;
-    // camera.aspect = $canvas.clientWidth / $canvas.clientHeight;
+    const $canvas = renderer.domElement;
+    camera.aspect = $canvas.clientWidth / $canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
 };

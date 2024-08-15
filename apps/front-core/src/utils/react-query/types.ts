@@ -7,7 +7,7 @@ export type QueryUrl = `/api/${string}`;
 
 export interface GetQueryOptionsParam<TQueryFnData> {
   axiosConfig?: AxiosRequestConfig;
-  queryOptions?: UseQueryOptions<TQueryFnData, AxiosError>;
+  queryOptions?: Partial<UseQueryOptions<TQueryFnData, AxiosError>>;
 }
 
 export interface GetQueryOptions<TQueryFnData> {

@@ -41,6 +41,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: bind event handler */
   #event: CylinderMapEvent = {
     onCylinderClick: () => {},
+    onCameraMoveEnd: () => {},
   };
 
   /** NOTE: canvas element */
@@ -70,12 +71,15 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: base z 좌표 */
   #bz: number = 0;
 
+  #prevCameraPosition: Nullable<{ x: number; y: number; z: number }> = null;
+
   constructor({
     $canvas,
     cylinderList,
     bx,
     bz,
     onCylinderClick = () => {},
+    onCameraMoveEnd = () => {},
   }: CylinderMapConstructorParam<CylinderType>) {
     /** NOTE: bind method this */
     this.updateState = this.updateState.bind(this);
@@ -92,6 +96,9 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.onPointerClick = this.onPointerClick.bind(this);
     this.render = this.render.bind(this);
     this.remove = this.remove.bind(this);
+    this.savePrevCameraPosition = this.savePrevCameraPosition.bind(this);
+    this.moveCamera = this.moveCamera.bind(this);
+    this.highlightCylinder = this.highlightCylinder.bind(this);
 
     /** NOTE: bind constructor param in property */
     this.$canvas = $canvas;
@@ -102,6 +109,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     /** NOTE: bind constructor param in property */
     this.#event = {
       onCylinderClick,
+      onCameraMoveEnd,
     };
 
     /** NOTE: create renderer */
@@ -133,21 +141,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.drawCylinderList();
 
     /** NOTE: set init target cylinder location  */
-    this.#store.animationMultiThread.push({
-      type: "camera-move",
-      duration: 1,
-      easingFuncionType: "easy-out",
-      progress: 0,
-      location: { x: this.#bx, z: this.#bz },
-      cameraStartLocation: {
-        x: this.#camera.position.x,
-        z: this.#camera.position.z,
-      },
-      controlsStartLocation: {
-        x: this.#controls.target.x,
-        z: this.#controls.target.z,
-      },
-    });
+    this.moveCamera({ x: this.#bx, y: 8 * Math.PI, z: this.#bz });
   }
 
   /** NOTE: store에 존재하는 state를 업데이트하는 메서드 */
@@ -255,7 +249,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
   /** NOTE: cylinder list를 canvas에 그리는 메서드 */
   drawCylinderList() {
-    // this.#scene.clear();
     this.#store.cylinderList.forEach((cylinderInfo) => {
       const { location } = cylinderInfo;
       const { x, z } = location;
@@ -325,7 +318,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   animate() {
     const { map, categoryMap, animationMultiThread } = this.#store;
 
-    const newAnimationQueue = animationMultiThread
+    const newAnimationMultiThread = animationMultiThread
       .filter((animationTask) => {
         const { type, progress, isKill } = animationTask;
         if (isKill) {
@@ -345,10 +338,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         const { type, location, duration, progress, easingFuncionType } =
           animationTask;
         const { x, z } = location;
-        if (!map[x]?.[z]) {
-          return { ...animationTask, isKill: true };
-        }
-        const { cylinder } = map[x]![z];
 
         const changeRate = 1 / duration / 1 / 60; // Rate of change per frame
         const nextprogress = Math.min(progress + changeRate, 1);
@@ -366,11 +355,18 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           }
         })();
 
+        /** NOTE: cylinder 만들때 애니메이션 로직 */
         if (type === "cylinder-create") {
+          if (!map[x]?.[z]) {
+            return { ...animationTask, isKill: true };
+          }
+
+          const { cylinder } = map[x]![z];
           cylinder.scale.set(1, easingFunction(progress), 1);
           cylinder.position.y = easingFunction(progress) / 2;
         }
 
+        /** NOTE: 같은 카테고리의 cylinder를 hover했을때 애니메이션 로직 */
         if (type === "cylinder-category-hover") {
           const { targetCategory, direct } = animationTask;
 
@@ -389,33 +385,37 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
             });
           });
 
+          /** NOTE: cylinder를 down 시키는 로직 */
           if (direct === "down") {
             const nextprogress = Math.max(progress - changeRate, 0);
             return { ...animationTask, progress: nextprogress };
           }
         }
 
+        /** NOTE: 카메라를 움직이는 로직 */
         if (type === "camera-move") {
           const { location, cameraStartLocation, controlsStartLocation } =
             animationTask;
-          const { x, z } = location;
+          const { x, y, z } = location;
 
           const currentCameraX = cameraStartLocation.x;
           const currentCameraZ = cameraStartLocation.z;
           const currentControlsZ = controlsStartLocation.z;
           const currentControlsX = controlsStartLocation.x;
 
+          /** NOTE: 좌표를 camera position으로 계산하는 로직 */
           const nx = (x - (z % 2) / 2) * 2;
           const nz = z * Math.sqrt(Math.PI);
 
           const angleX = Math.PI * 3;
           const angleZ = 6 * Math.PI;
+          // const angleZ = 0;
 
           // /** NOTE: set camera & controls */
           this.#camera.position.set(
             currentCameraX +
               (nx - currentCameraX + angleX) * easeOutCubic(progress),
-            8 * Math.PI,
+            y || this.#camera.position.y,
             currentCameraZ +
               (nz - currentCameraZ + angleZ) * easeOutCubic(progress),
           );
@@ -430,7 +430,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       });
 
     this.updateState({
-      animationMultiThread: newAnimationQueue,
+      animationMultiThread: newAnimationMultiThread,
     });
   }
 
@@ -565,7 +565,29 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   }
 
   onPointerClick() {
-    const { map, animationMultiThread } = this.#store;
+    if (
+      this.#prevCameraPosition &&
+      this.#camera.position.distanceTo(this.#prevCameraPosition) > 0.01
+    ) {
+      const { x, z } = this.#camera.position;
+
+      const angleX = Math.PI * 3;
+      const angleZ = 6 * Math.PI;
+      // const angleZ = 0;
+
+      /** NOTE: camera position을 좌표로 계산하는 로직 */
+      const nz = Math.round((z - angleZ) / Math.sqrt(Math.PI));
+      const nx = Math.round((x - angleX) / 2 + (nz % 2) / 2);
+
+      if (typeof this.#event.onCameraMoveEnd === "function") {
+        this.#event.onCameraMoveEnd({ location: { x: nx, z: nz } });
+      }
+
+      this.moveCamera({ x: nx, z: nz });
+      return;
+    }
+
+    const { map } = this.#store;
 
     this.#raycaster.setFromCamera(this.#pointer, this.#camera);
     const intersects = this.#raycaster.intersectObjects(this.#scene.children);
@@ -582,7 +604,29 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       currentSelectedCylinder: cylinder,
     });
 
-    const hasAnimation = animationMultiThread.find(({ type }) => {
+    if (typeof this.#event.onCylinderClick === "function") {
+      this.#event.onCylinderClick({
+        object: cylinder,
+        location: { x, z },
+        category,
+      });
+    }
+    this.highlightCylinder({ cylinder });
+  }
+
+  /** NOTE: bind to pointerdown event */
+  savePrevCameraPosition() {
+    this.#prevCameraPosition = {
+      x: this.#camera.position.x,
+      y: this.#camera.position.y,
+      z: this.#camera.position.z,
+    };
+  }
+
+  moveCamera({ x, y, z }: { x: number; y?: number; z: number }) {
+    const { animationMultiThread } = this.#store;
+
+    const hasAnimation = !!animationMultiThread.find(({ type }) => {
       return type === "camera-move";
     });
 
@@ -593,8 +637,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
             return {
               ...animationTask,
               progress: 0,
-              x,
-              z,
+              location: { x, y, z },
               cameraStartLocation: {
                 x: this.#camera.position.x,
                 z: this.#camera.position.z,
@@ -618,7 +661,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         duration: 1,
         easingFuncionType: "easy-out",
         progress: 0,
-        location: { x, z },
+        location: { x, y, z },
         cameraStartLocation: {
           x: this.#camera.position.x,
           z: this.#camera.position.z,
@@ -629,14 +672,11 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         },
       });
     }
+    return;
+  }
 
-    if (typeof this.#event.onCylinderClick === "function") {
-      this.#event.onCylinderClick({
-        object: cylinder,
-        location: { x, z },
-        category,
-      });
-    }
+  highlightCylinder({ cylinder }: { cylinder: Cylinder }) {
+    console.log({ cylinder });
   }
 
   /** NOTE: render method */

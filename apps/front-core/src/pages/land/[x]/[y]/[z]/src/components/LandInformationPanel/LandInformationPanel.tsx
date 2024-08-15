@@ -19,13 +19,20 @@ import { cn } from "@/utils/tailwindcss";
 
 function LandInformationPanel() {
   const router = useRouter();
+  const showPanel =
+    !Number.isNaN(Number(router.query.sx)) &&
+    !Number.isNaN(Number(router.query.sz));
 
   const locationQuery = makeGetQueryOptions({
-    url: `/api/locations/${Number(router.query.x)}/${Number(router.query.z)}`,
+    url: `/api/locations/${Number(router.query.sx)}/${Number(router.query.sz)}`,
   });
 
   const { data: location, isLoading: isLocationLoading } = useQuery(
-    locationQuery.getQueryOptionsInClient(),
+    locationQuery.getQueryOptionsInClient({
+      queryOptions: {
+        enabled: showPanel,
+      },
+    }),
   );
 
   const { mutateAsync: pioneerLocation } = useMutation({
@@ -52,12 +59,15 @@ function LandInformationPanel() {
     router.push(`${window.location.pathname}/write`);
   };
 
+  if (!showPanel) {
+    return null;
+  }
+
   return (
     <div
       className={cn(
         "absolute",
         "top-4",
-        // "bottom-4",
         "right-4",
         "flex",
         "flex-col",
@@ -80,9 +90,17 @@ function LandInformationPanel() {
         e.stopPropagation();
       }}
     >
+      <h2>현재 선택된 땅 정보</h2>
+      {/* FIXME: category가 있을 경우에만 표시하도록 수정 필요 */}
+      {isLocationLoading && <h6>땅 정보 가져오는 중...</h6>}
+      {!isLocationLoading && location?.type === "empty" && <h6>빈땅</h6>}
+      {!isLocationLoading && location?.type === "mine-location" && (
+        <h6>내땅</h6>
+      )}
+      {!isLocationLoading && location?.type === "other-user-location" && (
+        <h6>남땅</h6>
+      )}
       <TooltipProvider>
-        {/* FIXME: category가 있을 경우에만 표시하도록 수정 필요 */}
-        {/* <Button>[category] 방문하기</Button> */}
         {/* TODO: loading ui 추가 - to shadcn */}
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>

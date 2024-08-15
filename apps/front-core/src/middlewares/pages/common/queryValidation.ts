@@ -10,25 +10,38 @@ export const checkSingleQuery = <
   Req extends CustomIncomingMessage & { query: Query },
 >({
   queryName = "",
-  defaultSingleQuery = "",
+  defaultSingleQuery: dQuery = "",
+  validationType = "string",
   validationMap = {},
   useSingleQuery = true,
 }: {
   queryName: string;
-  defaultSingleQuery?: string;
-  validationMap?: { [key: string]: boolean };
+  defaultSingleQuery?:
+    | string
+    | number
+    | ((req: Req) => string | number | undefined);
+  validationType?: "string" | "number";
+  validationMap?: { [key: string | number]: boolean };
   useSingleQuery?: boolean;
 }) => {
   const middleware: Middleware<Req> = async (req) => {
     if (!queryName) {
       throw new Error("queryName에 빈 스트링은 허용하지 않습니다.");
     }
+    const defaultSingleQuery = (() => {
+      if (typeof dQuery === "function") {
+        return dQuery(req);
+      }
+
+      return dQuery;
+    })();
 
     const targetQuery = req.query?.[queryName];
     const hasValidationMap = Object.keys(validationMap).length !== 0;
 
     if (
       hasValidationMap &&
+      typeof defaultSingleQuery !== "undefined" &&
       typeof validationMap[defaultSingleQuery] === "undefined"
     ) {
       throw new Error(
@@ -53,12 +66,47 @@ export const checkSingleQuery = <
       /** NOTE: validationMap이 있으면 targetQuery에 따라 validation 반환 */
       if (hasValidationMap) {
         if (targetQuery) {
-          const isValid = typeof validationMap[targetQuery] !== "undefined";
+          /** NOTE: validationType이 string일때의 검증 로직 */
+          if (validationType === "string") {
+            const isValid = typeof validationMap[targetQuery] !== "undefined";
 
-          return {
-            isValid,
-            [queryName]: isValid ? targetQuery : defaultSingleQuery,
-          };
+            if (
+              !!defaultSingleQuery &&
+              (typeof targetQuery === "undefined" || targetQuery === "")
+            ) {
+              return {
+                isValid: false,
+                [queryName]: defaultSingleQuery,
+              };
+            } else {
+              return {
+                isValid,
+                [queryName]: targetQuery,
+              };
+            }
+          }
+
+          /** NOTE: validationType이 number일때의 검증 로직 */
+          if (validationType === "number") {
+            const isValid =
+              typeof validationMap[targetQuery] !== "undefined" &&
+              !Number.isNaN(Number(targetQuery));
+
+            if (
+              !!defaultSingleQuery &&
+              (typeof targetQuery === "undefined" || targetQuery === "")
+            ) {
+              return {
+                isValid: false,
+                [queryName]: defaultSingleQuery,
+              };
+            } else {
+              return {
+                isValid,
+                [queryName]: targetQuery,
+              };
+            }
+          }
         } else {
           return {
             isValid: false,
@@ -67,7 +115,39 @@ export const checkSingleQuery = <
         }
       }
 
-      /** NOTE: 모든 케이스를 통과했으면 valid */
+      /** NOTE: 모든 케이스를 통과했고 validationType이 number일때의 검증 로직 */
+      if (validationType === "number") {
+        const isValid =
+          typeof targetQuery === "undefined" ||
+          targetQuery === "" ||
+          !Number.isNaN(Number(targetQuery));
+
+        if (
+          !!defaultSingleQuery &&
+          (typeof targetQuery === "undefined" || targetQuery === "")
+        ) {
+          return {
+            isValid: false,
+            [queryName]: defaultSingleQuery,
+          };
+        } else {
+          return {
+            isValid,
+            [queryName]: targetQuery,
+          };
+        }
+      }
+
+      /** NOTE: 모든 케이스를 통과했고 validationType이 string일때의 검증 로직 */
+      if (
+        !!defaultSingleQuery &&
+        (typeof targetQuery === "undefined" || targetQuery === "")
+      ) {
+        return {
+          isValid: false,
+          [queryName]: defaultSingleQuery,
+        };
+      }
       return {
         isValid: true,
         [queryName]: targetQuery ?? defaultSingleQuery,
