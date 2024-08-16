@@ -36,7 +36,7 @@ export const createCylinder = (
   cylinder.position.x = (x - (z % 2) / 2) * 2;
   cylinder.position.y = height / 2;
   cylinder.position.z = z * Math.sqrt(Math.PI);
-  cylinder.scale.set(1, 0, 1);
+  cylinder.scale.set(1, 1, 1);
 
   cylinder.name = `${x}.${z}`;
 

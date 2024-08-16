@@ -65,25 +65,24 @@ export const initControls = ({
 };
 
 export const initLight = ({ scene }: { scene: THREE.Scene }) => {
-  const particleLight = new THREE.Mesh(
-    new THREE.SphereGeometry(4, 8, 8),
-    new THREE.MeshBasicMaterial({ color: "#ffffff" }),
-  );
-  const pointLight = new THREE.PointLight("#ffffff", 2, 800, 0);
-  particleLight.add(pointLight);
-  particleLight.position.x = -500;
-  particleLight.position.y = -1000;
-  particleLight.position.z = -500;
+  const hemisphereLight = new THREE.HemisphereLight("#FFFFFF", "#ADD8E6", 0.8);
 
-  const intensity = 1;
-  const skyColor = 0xffffff;
-  const groundColor = 0x000000;
-  const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
+  const ambientLight = new THREE.AmbientLight("#FFFFFF", 1);
 
-  const ambientLight = new THREE.AmbientLight("#c1c1c1", 3);
+  const shadowLight = new THREE.DirectionalLight("#FFFFFF", 1);
+  shadowLight.position.set(150, 350, 350);
+  shadowLight.castShadow = true;
+  shadowLight.shadow.camera.left = -400;
+  shadowLight.shadow.camera.right = 400;
+  shadowLight.shadow.camera.top = 400;
+  shadowLight.shadow.camera.bottom = -400;
+  shadowLight.shadow.camera.near = 1;
+  shadowLight.shadow.camera.far = 1000;
+  shadowLight.shadow.mapSize.width = 4096;
+  shadowLight.shadow.mapSize.height = 4096;
 
-  scene.add(particleLight);
-  scene.add(light);
+  scene.add(hemisphereLight);
+  scene.add(shadowLight);
   scene.add(ambientLight);
 };
 

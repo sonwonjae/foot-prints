@@ -320,19 +320,12 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
     const newAnimationMultiThread = animationMultiThread
       .filter((animationTask) => {
-        const { type, progress, isKill } = animationTask;
+        const { isKill } = animationTask;
         if (isKill) {
           return false;
         }
 
-        if (type === "cylinder-category-hover") {
-          const { direct } = animationTask;
-          if (direct === "down") {
-            return progress > 0;
-          }
-        }
-
-        return progress < 1;
+        return true;
       })
       .map((animationTask) => {
         const { type, location, duration, progress, easingFuncionType } =
@@ -350,7 +343,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
               return easeOutCubic;
             default:
               return () => {
-                return progress;
+                return nextprogress;
               };
           }
         })();
@@ -362,23 +355,33 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           }
 
           const { cylinder } = map[x]![z];
-          cylinder.scale.set(1, easingFunction(progress), 1);
-          cylinder.position.y = easingFunction(progress) / 2;
+          const height =
+            (cylinder.geometry.parameters.height *
+              easingFunction(nextprogress)) /
+            2;
+          cylinder.scale.set(1, easingFunction(nextprogress), 1);
+          cylinder.position.y = height;
         }
 
         /** NOTE: 같은 카테고리의 cylinder를 hover했을때 애니메이션 로직 */
         if (type === "cylinder-category-hover") {
           const { targetCategory, direct } = animationTask;
+          const nextprogress = (() => {
+            switch (direct) {
+              case "down":
+                return Math.max(progress - changeRate, 0);
+              case "up":
+              default:
+                return Math.min(progress + changeRate, 1);
+            }
+          })();
 
           Object.entries(categoryMap).forEach(([category, cylinderList]) => {
             if (category !== targetCategory) {
               return;
             }
             cylinderList.forEach(({ cylinder, height }) => {
-              const scale = (height + easeOutCubic(progress)) / height;
-
-              cylinder.scale.set(1, scale, 1);
-              cylinder.position.y = (height * scale) / 2;
+              const scale = (1 + easeOutCubic(nextprogress)) / 1;
 
               cylinder.scale.set(1, scale, 1);
               cylinder.position.y = (height * scale) / 2;
@@ -387,7 +390,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
           /** NOTE: cylinder를 down 시키는 로직 */
           if (direct === "down") {
-            const nextprogress = Math.max(progress - changeRate, 0);
             return { ...animationTask, progress: nextprogress };
           }
         }
@@ -414,19 +416,32 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           // /** NOTE: set camera & controls */
           this.#camera.position.set(
             currentCameraX +
-              (nx - currentCameraX + angleX) * easeOutCubic(progress),
+              (nx - currentCameraX + angleX) * easeOutCubic(nextprogress),
             y || this.#camera.position.y,
             currentCameraZ +
-              (nz - currentCameraZ + angleZ) * easeOutCubic(progress),
+              (nz - currentCameraZ + angleZ) * easeOutCubic(nextprogress),
           );
           this.#controls.target.set(
-            currentControlsX + (nx - currentControlsX) * easeOutCubic(progress),
+            currentControlsX +
+              (nx - currentControlsX) * easeOutCubic(nextprogress),
             0,
-            currentControlsZ + (nz - currentControlsZ) * easeOutCubic(progress),
+            currentControlsZ +
+              (nz - currentControlsZ) * easeOutCubic(nextprogress),
           );
         }
 
         return { ...animationTask, progress: nextprogress };
+      })
+      .filter((animationTask) => {
+        const { type, progress } = animationTask;
+        if (type === "cylinder-category-hover") {
+          const { direct } = animationTask;
+          if (direct === "down") {
+            return progress > 0;
+          }
+        }
+
+        return progress < 1;
       });
 
     this.updateState({
