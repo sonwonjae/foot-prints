@@ -73,7 +73,7 @@ type AnimationTask =
       location: { x: number; y?: number; z: number };
       duration: number;
       progress: number;
-      easingFuncionType: EasingFunctionType;
+      easingFuncionType?: EasingFunctionType;
       isKill?: boolean;
       cameraStartLocation: CylinderLocation;
       controlsStartLocation: CylinderLocation;
@@ -93,8 +93,16 @@ type AnimationTask =
       location: CylinderLocation;
       duration: number;
       progress: number;
-      easingFuncionType: EasingFunctionType;
+      easingFuncionType?: EasingFunctionType;
       isKill?: boolean;
+    }
+  | {
+      type: "user-float";
+      location: CylinderLocation;
+      duration: number;
+      progress: number;
+      isKill?: boolean;
+      easingFuncionType?: EasingFunctionType;
     };
 
 export interface CylinderMapStore<CylinderType> {
@@ -106,6 +114,7 @@ export interface CylinderMapStore<CylinderType> {
   targetCylinderLocation: Nullable<TargetCylinderLocation>;
   cylinderList: Array<CylinderType>;
   animationMultiThread: Array<AnimationTask>;
+  user: Nullable<THREE.Object3D<THREE.Object3DEventMap>>;
 }
 
 export interface OnCylinderClick {

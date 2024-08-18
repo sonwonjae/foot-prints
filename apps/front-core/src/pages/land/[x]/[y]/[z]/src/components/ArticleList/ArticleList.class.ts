@@ -3,6 +3,8 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 import { convertStringToHexColor, darker } from "@/three/utils/color";
 import { createCylinder } from "@/three/utils/cylinder";
+import { parseGeometryName } from "@/three/utils/geometry";
+import { createUser } from "@/three/utils/user";
 
 import {
   Cylinder,
@@ -36,6 +38,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     targetCylinderLocation: null,
     cylinderList: [],
     animationMultiThread: [],
+    user: null,
   };
 
   /** NOTE: bind event handler */
@@ -86,6 +89,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.updateEvent = this.updateEvent.bind(this);
     this.addCylinderInScene = this.addCylinderInScene.bind(this);
     this.drawCylinderList = this.drawCylinderList.bind(this);
+    this.drawUser = this.drawUser.bind(this);
     this.updateCylinderMap = this.updateCylinderMap.bind(this);
     this.updateCategoryMap = this.updateCategoryMap.bind(this);
     this.resetTargetCylinder = this.resetTargetCylinder.bind(this);
@@ -128,6 +132,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.#scene = new THREE.Scene();
     // this.#scene.fog = new THREE.FogExp2("#FFFFFF", 0.02);
     this.#scene.background = new THREE.Color("#FFFFFF");
+
     this.#camera.lookAt(this.#scene.position);
 
     /** NOTE: create light * set light in scene */
@@ -139,6 +144,9 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
     /** NOTE: create fill cylinder list */
     this.drawCylinderList();
+
+    /** NOTE: create user */
+    this.drawUser();
 
     /** NOTE: set init target cylinder location  */
     this.moveCamera({ x: this.#bx, y: 8 * Math.PI, z: this.#bz });
@@ -258,6 +266,38 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         return;
       }
       this.addCylinderInScene(cylinderInfo);
+    });
+  }
+
+  drawUser() {
+    const { user, map, animationMultiThread } = this.#store;
+    this.#bx;
+    this.#bz;
+
+    /** NOTE: map에 user가 존재하지 않으면 추가 */
+    if (user) {
+      return;
+    }
+
+    /** NOTE: map에 user가 안착할 cylinder가 없으면 return */
+    if (!map[this.#bx]?.[this.#bz]?.isExist) {
+      throw new Error("안착할 cylinder가 업습니다,");
+    }
+    const { height } = map[this.#bx]![this.#bz]!;
+
+    const { body } = createUser(this.#scene, {
+      x: this.#bx,
+      height,
+      z: this.#bz,
+    });
+    this.updateState({ user: body });
+
+    animationMultiThread.push({
+      type: "user-float",
+      location: { x: this.#bx, z: this.#bz },
+      easingFuncionType: "easy-out",
+      duration: 2.4,
+      progress: 0,
     });
   }
 
@@ -430,6 +470,30 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           );
         }
 
+        if (type === "user-float") {
+          // console.log({ type, nextprogress });
+
+          const { user } = this.#store;
+          if (!user) {
+            return { ...animationTask, isKill: true };
+          }
+          const { location } = animationTask;
+          const { x, z } = location;
+          const { cylinder } = map[x]![z]!;
+
+          const next = nextprogress < 0.5 ? nextprogress : 1 - nextprogress;
+
+          user.position.y =
+            cylinder.geometry.parameters.height * cylinder.scale.y +
+            0.5 +
+            0.1 +
+            next;
+
+          if (nextprogress >= 1) {
+            return { ...animationTask, progress: 0 };
+          }
+        }
+
         return { ...animationTask, progress: nextprogress };
       })
       .filter((animationTask) => {
@@ -455,31 +519,48 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.#pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     this.#pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
     this.#raycaster.setFromCamera(this.#pointer, this.#camera);
-    const cylinder = (this.#raycaster.intersectObjects(
-      this.#scene.children,
-      false,
-    )?.[0]?.object ?? null) as Nullable<Cylinder>;
+    const object =
+      this.#raycaster.intersectObjects(this.#scene.children, false)?.[0]
+        ?.object ?? null;
+
+    const { type } = parseGeometryName(object);
 
     /** NOTE: set mouse style */
-    updateMouseStyle({ $canvas: this.$canvas, cylinder });
+    updateMouseStyle({ $canvas: this.$canvas, object });
 
-    /** NOTE: set cylinder enter & out event */
-    dispatchCylinderMouseEvent({
-      $canvas: this.$canvas,
-      prevHoveredCylinder,
-      currentHoveredCylinder: cylinder,
-    });
-
-    /** NOTE: update cylinder state */
-    this.updateState({
-      prevHoveredCylinder: cylinder,
-    });
+    if (type === "cylinder") {
+      const cylinder = object as Cylinder;
+      /** NOTE: set cylinder enter & out event */
+      dispatchCylinderMouseEvent({
+        $canvas: this.$canvas,
+        prevHoveredCylinder,
+        currentHoveredCylinder: cylinder,
+      });
+      /** NOTE: update cylinder state */
+      this.updateState({
+        prevHoveredCylinder: cylinder,
+      });
+    } else {
+      /** NOTE: set cylinder enter & out event */
+      dispatchCylinderMouseEvent({
+        $canvas: this.$canvas,
+        prevHoveredCylinder,
+        currentHoveredCylinder: null,
+      });
+      /** NOTE: update cylinder state */
+      this.updateState({
+        prevHoveredCylinder: null,
+      });
+    }
   }
 
   onCylinderEnter(event: CustomEvent<{ cylinder: Cylinder }>) {
     const { map, animationMultiThread } = this.#store;
     const { cylinder } = event.detail;
-    const [x, z] = cylinder.name.split(".").map(Number) as [number, number];
+    const { type, x, z } = parseGeometryName(cylinder);
+    if (type !== "cylinder") {
+      return;
+    }
     const cylinderDetail = map[x]![z]!;
     if (!cylinderDetail) {
       return null;
@@ -536,7 +617,11 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   onCylinderOut(event: CustomEvent<{ cylinder: Cylinder }>) {
     const { map, animationMultiThread } = this.#store;
     const { cylinder } = event.detail;
-    const [x, z] = cylinder.name.split(".").map(Number) as [number, number];
+    const { type, x, z } = parseGeometryName(cylinder);
+    if (type !== "cylinder") {
+      return;
+    }
+
     const cylinderDetail = map[x]![z]!;
 
     cylinder.material.color.set(cylinderDetail.color!);
@@ -611,22 +696,25 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       return;
     }
 
-    const cylinder = intersects[0].object as Cylinder;
-    const [x, z] = cylinder.name.split(".").map(Number) as [number, number];
-    const { category } = map[x]![z]!;
+    const object = intersects[0].object as Cylinder;
+    const { type, x, z } = parseGeometryName(object);
+    if (type === "cylinder") {
+      const cylinder = object;
+      const { category } = map[x]![z]!;
 
-    this.updateState({
-      currentSelectedCylinder: cylinder,
-    });
-
-    if (typeof this.#event.onCylinderClick === "function") {
-      this.#event.onCylinderClick({
-        object: cylinder,
-        location: { x, z },
-        category,
+      this.updateState({
+        currentSelectedCylinder: cylinder,
       });
+
+      if (typeof this.#event.onCylinderClick === "function") {
+        this.#event.onCylinderClick({
+          object: cylinder,
+          location: { x, z },
+          category,
+        });
+      }
+      this.highlightCylinder({ cylinder });
     }
-    this.highlightCylinder({ cylinder });
   }
 
   /** NOTE: bind to pointerdown event */

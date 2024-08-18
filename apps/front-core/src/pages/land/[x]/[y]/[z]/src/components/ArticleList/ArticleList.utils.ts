@@ -20,12 +20,15 @@ export const resize = ({
 };
 
 export const createRenderer = ({ $canvas }: { $canvas: HTMLCanvasElement }) => {
-  return new THREE.WebGLRenderer({
+  const renderer = new THREE.WebGLRenderer({
     antialias: true,
     canvas: $canvas,
     alpha: true,
     premultipliedAlpha: false,
   });
+  renderer.shadowMap.enabled = true; // 그림자 맵 활성화
+
+  return renderer;
 };
 
 export const initCamera = ({ $canvas }: { $canvas: HTMLCanvasElement }) => {
@@ -70,16 +73,16 @@ export const initLight = ({ scene }: { scene: THREE.Scene }) => {
   const ambientLight = new THREE.AmbientLight("#FFFFFF", 1);
 
   const shadowLight = new THREE.DirectionalLight("#FFFFFF", 1);
-  shadowLight.position.set(150, 350, 350);
+  shadowLight.position.set(15, 35, 35);
   shadowLight.castShadow = true;
-  shadowLight.shadow.camera.left = -400;
-  shadowLight.shadow.camera.right = 400;
-  shadowLight.shadow.camera.top = 400;
-  shadowLight.shadow.camera.bottom = -400;
+  shadowLight.shadow.camera.left = -100;
+  shadowLight.shadow.camera.right = 100;
+  shadowLight.shadow.camera.top = 100;
+  shadowLight.shadow.camera.bottom = -100;
   shadowLight.shadow.camera.near = 1;
-  shadowLight.shadow.camera.far = 1000;
-  shadowLight.shadow.mapSize.width = 4096;
-  shadowLight.shadow.mapSize.height = 4096;
+  shadowLight.shadow.camera.far = 500;
+  shadowLight.shadow.mapSize.width = 1080;
+  shadowLight.shadow.mapSize.height = 1080;
 
   scene.add(hemisphereLight);
   scene.add(shadowLight);
@@ -88,12 +91,12 @@ export const initLight = ({ scene }: { scene: THREE.Scene }) => {
 
 export const updateMouseStyle = ({
   $canvas,
-  cylinder,
+  object,
 }: {
   $canvas: HTMLCanvasElement;
-  cylinder: Nullable<Cylinder>;
+  object: Nullable<THREE.Object3D<THREE.Object3DEventMap>>;
 }) => {
-  if (cylinder) {
+  if (object) {
     $canvas.style.cursor = "pointer";
   } else {
     $canvas.style.cursor = "default";

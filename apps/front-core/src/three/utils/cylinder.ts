@@ -33,12 +33,13 @@ export const createCylinder = (
   });
 
   const cylinder = new THREE.Mesh(geometry, material);
+  cylinder.receiveShadow = true; // 바닥이 그림자를 받을 수 있도록 설정
   cylinder.position.x = (x - (z % 2) / 2) * 2;
   cylinder.position.y = height / 2;
   cylinder.position.z = z * Math.sqrt(Math.PI);
   cylinder.scale.set(1, 1, 1);
 
-  cylinder.name = `${x}.${z}`;
+  cylinder.name = `cylinder.${x}.${z}`;
 
   scene.add(cylinder);
 
