@@ -74,6 +74,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     /** NOTE: bind method this */
     this.updateState = this.updateState.bind(this);
     this.drawCylinderList = this.drawCylinderList.bind(this);
+    this.checkCylinder = this.checkCylinder.bind(this);
     this.updateCylinderMap = this.updateCylinderMap.bind(this);
     this.updateCategoryMap = this.updateCategoryMap.bind(this);
     this.animate = this.animate.bind(this);
@@ -190,6 +191,16 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         this.updateCategoryMap({ cylinder });
       }
     });
+  }
+
+  checkCylinder({ x, z }: CylinderLocation) {
+    const { map } = this.#store;
+
+    if (!map[x]?.[z]?.cylinder) {
+      return false;
+    }
+
+    return map[x][z].cylinder;
   }
 
   /** NOTE: store에 존재하는 state 중 map의 특정 좌표에 cylinder를 업데이트하는 메서드 */

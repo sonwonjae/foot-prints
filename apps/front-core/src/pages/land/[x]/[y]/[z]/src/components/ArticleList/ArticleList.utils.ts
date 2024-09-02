@@ -3,8 +3,6 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 
 import { resizeRendererToDisplaySize } from "@/three/utils/resize";
 
-import { Cylinder } from "./ArticleList.type";
-
 export const resize = ({
   renderer,
   camera,
@@ -100,65 +98,6 @@ export const updateMouseStyle = ({
     $canvas.style.cursor = "pointer";
   } else {
     $canvas.style.cursor = "default";
-  }
-};
-
-export const dispatchCylinderMouseEvent = ({
-  $canvas,
-  prevHoveredCylinder,
-  currentHoveredCylinder,
-}: {
-  $canvas: HTMLCanvasElement;
-  prevHoveredCylinder: Nullable<Cylinder>;
-  currentHoveredCylinder: Nullable<Cylinder>;
-}) => {
-  if (!prevHoveredCylinder) {
-    if (currentHoveredCylinder) {
-      const cylinderEnterEvent = new CustomEvent<{ cylinder: Cylinder }>(
-        "cylinder-enter",
-        {
-          detail: {
-            cylinder: currentHoveredCylinder,
-          },
-        },
-      );
-      $canvas.dispatchEvent(cylinderEnterEvent);
-    }
-  }
-
-  if (!currentHoveredCylinder) {
-    if (prevHoveredCylinder) {
-      const cylinderOutEvent = new CustomEvent<{ cylinder: Cylinder }>(
-        "cylinder-out",
-        {
-          detail: { cylinder: prevHoveredCylinder },
-        },
-      );
-      $canvas.dispatchEvent(cylinderOutEvent);
-    }
-  }
-  if (prevHoveredCylinder && currentHoveredCylinder) {
-    if (prevHoveredCylinder?.name !== currentHoveredCylinder?.name) {
-      const cylinderEnterEvent = new CustomEvent<{ cylinder: Cylinder }>(
-        "cylinder-enter",
-        {
-          detail: {
-            cylinder: currentHoveredCylinder,
-          },
-        },
-      );
-      const cylinderOutEvent = new CustomEvent<{ cylinder: Cylinder }>(
-        "cylinder-out",
-        {
-          detail: {
-            cylinder: prevHoveredCylinder,
-          },
-        },
-      );
-
-      $canvas.dispatchEvent(cylinderOutEvent);
-      $canvas.dispatchEvent(cylinderEnterEvent);
-    }
   }
 };
 

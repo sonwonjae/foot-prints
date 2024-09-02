@@ -1,3 +1,4 @@
+import { round } from "es-toolkit";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { v4 as uuidv4 } from "uuid";
@@ -47,6 +48,12 @@ interface UserFallAnimationTask {
   progress: number;
   isKill?: boolean;
 }
+interface UserVibrateAnimationTask {
+  type: "user-vibrate";
+  duration: number;
+  progress: number;
+  isKill?: boolean;
+}
 interface UserMoveAnimationTask {
   id: ReturnType<typeof uuidv4>;
   moveBy: "keyboard" | "pointer";
@@ -61,6 +68,7 @@ interface UserMoveAnimationTask {
 type AnimationTask =
   | UserCreateAnimationTask
   | UserFallAnimationTask
+  | UserVibrateAnimationTask
   | UserMoveAnimationTask;
 
 /** NOTE: 떠있는 높이 height */
@@ -128,6 +136,7 @@ export class User {
 
     this.onCameraMoveEnd = this.onCameraMoveEnd.bind(this);
     this.move = this.move.bind(this);
+    this.vibrate = this.vibrate.bind(this);
     this.getCurrentMoveAnimation = this.getCurrentMoveAnimation.bind(this);
     this.addUserEvents = this.addUserEvents.bind(this);
     this.removeUserEvents = this.removeUserEvents.bind(this);
@@ -196,6 +205,14 @@ export class User {
     console.log("camera-move", nextLocation);
   }
 
+  vibrate() {
+    this.#animationMultiThread.push({
+      type: "user-vibrate",
+      duration: 0.55,
+      progress: 0,
+    });
+  }
+
   move(
     nextLocation: CylinderLocation,
     moveBy: UserMoveAnimationTask["moveBy"] = "pointer",
@@ -210,6 +227,8 @@ export class User {
     ) {
       return;
     }
+
+    /** NOTE: 정상적으로 이동할 수 있는 경우 */
     const lastMoveAnimationTask = this.#animationMultiThread.findLast(
       (animationTask) => {
         return !!(
@@ -312,6 +331,20 @@ export class User {
           return { ...animationTask, progress: nextprogress };
         }
 
+        if (type === "user-vibrate") {
+          const next =
+            (easeOutCubic(
+              nextprogress < 0.5 ? nextprogress : 1 - nextprogress,
+            ) *
+              ((round(progress, 1) * 5) % 2 ? 1 : -1)) /
+            12;
+
+          const { nx, nz } = locationToCameraPosition(this.location);
+
+          this.object.position.x = nx - next;
+          this.object.position.z = nz + next;
+        }
+
         if (type === "user-move") {
           if (!this.isCreated) {
             return animationTask;
@@ -371,6 +404,13 @@ export class User {
         /** NOTE: user가 다 만들어졌으면 this.isCreated 상태 업데이트 */
         if (type === "user-create" && progress >= 1) {
           this.isCreated = true;
+        }
+
+        /** NOTE: vibrate가 끝났으면 위치 원상복구 */
+        if (type === "user-vibrate" && progress >= 1) {
+          const { nx, nz } = locationToCameraPosition(this.location);
+          this.object.position.x = nx;
+          this.object.position.z = nz;
         }
 
         if (type === "user-move" && progress >= 1) {

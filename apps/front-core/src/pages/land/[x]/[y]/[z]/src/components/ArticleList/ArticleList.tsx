@@ -71,9 +71,10 @@ function ArticleList({
     router.push(`/land/${x}/0/${z}${queryString}`, undefined, {
       shallow: true,
     });
-    if (articleMap?.user) {
-      articleMap.user.move({ x, z });
-    }
+    /** FIXME: 카메라 이동할때 user도 이동시킬지는 고민 필요 */
+    // if (articleMap?.user) {
+    //   articleMap.user.move({ x, z });
+    // }
   };
 
   const onUserFallEnd = () => {
@@ -82,25 +83,32 @@ function ArticleList({
 
   const throttleMoveLocation = useCallback(
     throttle(({ nx, nz }: { nx: number; nz: number }) => {
-      router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
-        shallow: true,
-      });
       if (!articleMap) {
         return;
       }
 
-      articleMap.moveCameraAnimation({
-        x: nx,
-        z: nz,
-      });
+      const isExistCylinder = !!articleMap.checkCylinder({ x: nx, z: nz });
 
-      articleMap.user.move(
-        {
+      if (isExistCylinder) {
+        router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
+          shallow: true,
+        });
+
+        articleMap.moveCameraAnimation({
           x: nx,
           z: nz,
-        },
-        "keyboard",
-      );
+        });
+
+        articleMap.user.move(
+          {
+            x: nx,
+            z: nz,
+          },
+          "keyboard",
+        );
+      } else {
+        articleMap.user.vibrate();
+      }
     }, 350),
     [!!articleMap],
   );
@@ -144,7 +152,6 @@ function ArticleList({
 
     if (!locationList) {
       return;
-      // throw new Error("location list를 불러오는데에 실패했습니다.");
     }
 
     /** NOTE: initial three */
