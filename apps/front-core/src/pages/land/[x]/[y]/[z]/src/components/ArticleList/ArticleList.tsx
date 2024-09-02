@@ -9,7 +9,8 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { makeGetQueryOptions } from "@/utils/react-query";
 
 import { CylinderMap } from "./ArticleList.class";
-import { Article, OnCameraMoveEnd, OnCylinderClick } from "./ArticleList.type";
+import { Article, CylinderLocation } from "./ArticleList.type";
+import { Cylinder } from "./class/cylinder.class";
 
 function ArticleList({
   ...props
@@ -32,9 +33,12 @@ function ArticleList({
     locationListQuery.getQueryOptionsInClient(),
   );
 
-  const onCylinderClick: OnCylinderClick = ({ location }) => {
+  const onCylinderClick = ({
+    detail: { cylinder },
+  }: CustomEvent<{ cylinder: Cylinder }>) => {
+    console.log("cylinder click");
+    const { location } = cylinder;
     const { x, z } = location;
-    console.log({ x, z });
     router.push(
       `${window.location.pathname}${`?${QueryString.stringify({
         ...QueryString.parse(queryString),
@@ -48,11 +52,16 @@ function ArticleList({
     );
   };
 
-  const onCameraMoveEnd: OnCameraMoveEnd = ({ location }) => {
+  const onCameraMoveEnd = ({
+    detail: { location },
+  }: CustomEvent<{ location: CylinderLocation }>) => {
     const { x, z } = location;
     router.push(`/land/${x}/0/${z}${queryString}`, undefined, {
       shallow: true,
     });
+    if (articleMap?.user) {
+      articleMap.user.move({ x, z });
+    }
   };
 
   const throttleMoveLocation = useCallback(
@@ -60,8 +69,26 @@ function ArticleList({
       router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
         shallow: true,
       });
+      if (!articleMap) {
+        return;
+      }
+
+
+
+      articleMap.moveCameraAnimation({
+        x: nx,
+        z: nz,
+      });
+
+      articleMap.user.move(
+        {
+          x: nx,
+          z: nz,
+        },
+        "keyboard",
+      );
     }, 350),
-    [],
+    [!!articleMap],
   );
 
   const moveCameraWithArrowKey = (e: KeyboardEvent) => {
@@ -73,26 +100,18 @@ function ArticleList({
     const x = Number(router.query.x);
     const z = Number(router.query.z);
 
-    const move = ({ nx, nz }: { nx: number; nz: number }) => {
-      throttleMoveLocation({ nx, nz });
-      articleMap.moveCamera({
-        x: nx,
-        z: nz,
-      });
-    };
-
     switch (key) {
       case "ARROWUP":
-        move({ nx: x - Number(!!(z % 2)), nz: z - 1 });
+        throttleMoveLocation({ nx: x - Number(!!(z % 2)), nz: z - 1 });
         break;
       case "ARROWDOWN":
-        move({ nx: x + Number(!(z % 2)), nz: z + 1 });
+        throttleMoveLocation({ nx: x + Number(!(z % 2)), nz: z + 1 });
         break;
       case "ARROWLEFT":
-        move({ nx: x - 1, nz: z });
+        throttleMoveLocation({ nx: x - 1, nz: z });
         break;
       case "ARROWRIGHT":
-        move({ nx: x + 1, nz: z });
+        throttleMoveLocation({ nx: x + 1, nz: z });
         break;
       default:
         break;
@@ -121,8 +140,6 @@ function ArticleList({
       cylinderList: locationList,
       bx: Number(router.query.x),
       bz: Number(router.query.z),
-      onCylinderClick,
-      onCameraMoveEnd,
     });
     setArticleMap(cylinderMap);
 
@@ -142,6 +159,14 @@ function ArticleList({
       cylinderList: locationList,
     });
     articleMap.drawCylinderList();
+    articleMap.addEvents();
+
+    return () => {
+      articleMap.removeEvents();
+
+      /** NOTE: remove three */
+      // articleMap.remove();
+    };
   }, [
     $canvasRef.current,
     !!articleMap,
@@ -153,13 +178,18 @@ function ArticleList({
 
   /** NOTE: articleMap event update */
   useEffect(() => {
-    if (!articleMap) {
+    if (!$canvasRef.current) {
       return;
     }
-    articleMap.updateEvent({
-      onCylinderClick,
-      onCameraMoveEnd,
-    });
+
+    const $canvas = $canvasRef.current;
+
+    $canvas.addEventListener("cylinder-click", onCylinderClick);
+    $canvas.addEventListener("camera-move-end", onCameraMoveEnd);
+    return () => {
+      $canvas.removeEventListener("cylinder-click", onCylinderClick);
+      $canvas.removeEventListener("camera-move-end", onCameraMoveEnd);
+    };
   }, [
     $canvasRef.current,
     !!articleMap,
@@ -168,45 +198,6 @@ function ArticleList({
     router.query.sx,
     router.query.sz,
   ]);
-
-  /** NOTE: articleMap event binding */
-  useEffect(() => {
-    if (!$canvasRef.current) {
-      return;
-    }
-    if (!articleMap) {
-      return;
-    }
-    const $canvas = $canvasRef.current;
-
-    /** NOTE: bind event */
-    window.addEventListener("resize", articleMap.render);
-    window.addEventListener("pointermove", articleMap.onPointerMove);
-    window.addEventListener("pointerup", articleMap.onPointerClick);
-    window.addEventListener("pointerdown", articleMap.savePrevCameraPosition);
-
-    /** NOTE: bind custom event */
-    $canvas.addEventListener("cylinder-enter", articleMap.onCylinderEnter);
-    $canvas.addEventListener("cylinder-out", articleMap.onCylinderOut);
-
-    return () => {
-      /** NOTE: remove event */
-      window.removeEventListener("resize", articleMap.render);
-      window.removeEventListener("pointermove", articleMap.onPointerMove);
-      window.removeEventListener("pointerup", articleMap.onPointerClick);
-      window.removeEventListener(
-        "pointerdown",
-        articleMap.savePrevCameraPosition,
-      );
-
-      /** NOTE: remove custom event */
-      $canvas.removeEventListener("cylinder-enter", articleMap.onCylinderEnter);
-      $canvas.removeEventListener("cylinder-out", articleMap.onCylinderOut);
-
-      /** NOTE: remove three */
-      articleMap.remove();
-    };
-  }, [$canvasRef.current, !!articleMap]);
 
   /** NOTE: bind keyboard event */
   useEffect(() => {

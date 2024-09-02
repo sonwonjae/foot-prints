@@ -20,8 +20,6 @@ export const createUser = (
   const bodySize = 0.5;
   const floatHeight = 0.1;
 
-  console.log(bx, by, bz);
-
   // 몸체
   const bodyGeometry = new THREE.SphereGeometry(bodySize, 32, 32);
   const bodyMaterial = new THREE.MeshToonMaterial({

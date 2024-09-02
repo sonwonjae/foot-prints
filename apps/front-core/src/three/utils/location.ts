@@ -1,0 +1,24 @@
+import { CylinderLocation } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
+
+/** NOTE: 좌표를 camera position으로 계산하는 로직 */
+export const locationToCameraPosition = ({ x, z }: CylinderLocation) => {
+  const nx = (x - (z % 2) / 2) * 2;
+  const nz = z * Math.sqrt(Math.PI);
+  return {
+    nx,
+    nz,
+  };
+};
+
+/** NOTE: camera position을 좌표로 계산하는 로직 */
+export const cameraPositionToLocation = ({ x, z }: CylinderLocation) => {
+  const angleX = Math.PI * 3;
+  const angleZ = 6 * Math.PI;
+
+  const nz = Math.round((z - angleZ) / Math.sqrt(Math.PI));
+  const nx = Math.round((x - angleX) / 2 + (nz % 2) / 2);
+  return {
+    nx,
+    nz,
+  };
+};

@@ -1,50 +1,37 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-import { convertStringToHexColor, darker } from "@/three/utils/color";
-import { createCylinder } from "@/three/utils/cylinder";
-import { parseGeometryName } from "@/three/utils/geometry";
-import { createUser } from "@/three/utils/user";
+import {
+  cameraPositionToLocation,
+  locationToCameraPosition,
+} from "@/three/utils/location";
 
 import {
-  Cylinder,
   CylinderMapStore,
   DefaultCylinderType,
-  CylinderMapEvent,
   CylinderMapConstructorParam,
   UpdateCylinderMapParam,
   UpdateCategoryMapParam,
+  ArticleMap,
+  CylinderLocation,
 } from "./ArticleList.type";
 import {
   createRenderer,
-  dispatchCylinderMouseEvent,
-  easeInCubic,
   easeOutCubic,
   initCamera,
   initControls,
   initLight,
   resize,
-  updateMouseStyle,
 } from "./ArticleList.utils";
-
+import { Cylinder } from "./class/cylinder.class";
+import { User } from "./class/user.class";
 export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: CylinderMap instance state */
   #store: CylinderMapStore<CylinderType> = {
-    currentSelectedCylinder: null,
-    currentCategory: null,
-    prevHoveredCylinder: null,
     map: {},
     categoryMap: {},
-    targetCylinderLocation: null,
     cylinderList: [],
     animationMultiThread: [],
-    user: null,
-  };
-
-  /** NOTE: bind event handler */
-  #event: CylinderMapEvent = {
-    onCylinderClick: () => {},
-    onCameraMoveEnd: () => {},
   };
 
   /** NOTE: canvas element */
@@ -76,45 +63,35 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
   #prevCameraPosition: Nullable<{ x: number; y: number; z: number }> = null;
 
+  user: User;
+
   constructor({
     $canvas,
     cylinderList,
     bx,
     bz,
-    onCylinderClick = () => {},
-    onCameraMoveEnd = () => {},
   }: CylinderMapConstructorParam<CylinderType>) {
     /** NOTE: bind method this */
     this.updateState = this.updateState.bind(this);
-    this.updateEvent = this.updateEvent.bind(this);
-    this.addCylinderInScene = this.addCylinderInScene.bind(this);
     this.drawCylinderList = this.drawCylinderList.bind(this);
-    this.drawUser = this.drawUser.bind(this);
     this.updateCylinderMap = this.updateCylinderMap.bind(this);
     this.updateCategoryMap = this.updateCategoryMap.bind(this);
-    this.resetTargetCylinder = this.resetTargetCylinder.bind(this);
     this.animate = this.animate.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onCylinderEnter = this.onCylinderEnter.bind(this);
     this.onCylinderOut = this.onCylinderOut.bind(this);
-    this.onPointerClick = this.onPointerClick.bind(this);
+    this.onPointerUp = this.onPointerUp.bind(this);
     this.render = this.render.bind(this);
-    this.remove = this.remove.bind(this);
-    this.savePrevCameraPosition = this.savePrevCameraPosition.bind(this);
-    this.moveCamera = this.moveCamera.bind(this);
-    this.highlightCylinder = this.highlightCylinder.bind(this);
+    this.onPointerDown = this.onPointerDown.bind(this);
+    this.moveCameraAnimation = this.moveCameraAnimation.bind(this);
+    this.addEvents = this.addEvents.bind(this);
+    this.removeEvents = this.removeEvents.bind(this);
 
     /** NOTE: bind constructor param in property */
     this.$canvas = $canvas;
     this.#store = { ...this.#store, cylinderList };
     this.#bx = bx ?? 0;
     this.#bz = bz ?? 0;
-
-    /** NOTE: bind constructor param in property */
-    this.#event = {
-      onCylinderClick,
-      onCameraMoveEnd,
-    };
 
     /** NOTE: create renderer */
     this.#renderer = createRenderer({ $canvas: this.$canvas });
@@ -145,11 +122,20 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     /** NOTE: create fill cylinder list */
     this.drawCylinderList();
 
-    /** NOTE: create user */
-    this.drawUser();
-
     /** NOTE: set init target cylinder location  */
-    this.moveCamera({ x: this.#bx, y: 8 * Math.PI, z: this.#bz });
+    this.moveCameraAnimation({ x: this.#bx, y: 8 * Math.PI, z: this.#bz });
+
+    /** NOTE: create user */
+    this.user = new User({
+      $canvas: this.$canvas,
+      camera: this.#camera,
+      scene: this.#scene,
+      raycaster: this.#raycaster,
+      pointer: this.#pointer,
+
+      map: this.#store.map,
+      location: { x: this.#bx, z: this.#bz },
+    });
   }
 
   /** NOTE: store에 존재하는 state를 업데이트하는 메서드 */
@@ -160,203 +146,93 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     };
   }
 
-  /** NOTE: event에 존재하는 handler를 업데이트하는 메서드 */
-  updateEvent(newEvent: Partial<CylinderMapEvent>) {
-    this.#event = {
-      ...this.#event,
-      ...newEvent,
-    };
-  }
-
-  addCylinderInScene({ location, category, height, type }: CylinderType) {
-    const { animationMultiThread } = this.#store;
-    const { x, z } = location;
-
-    const finalColor = (() => {
-      switch (true) {
-        case type === "mine-location":
-          /** FIXME: 어느정도 기능 마무리 된 후 mine-location unit UI 고도화 하기 */
-          return "#E6E6FA";
-        case type === "other-user-location" && !category:
-          /** FIXME: 어느정도 기능 마무리 된 후 mine-location unit UI 고도화 하기 */
-          return "#33FF57";
-        case !!category:
-          return convertStringToHexColor(category);
-        case type === "empty":
-        default:
-          return "#FFFFFF";
-      }
-    })();
-
-    const finalHeight = (() => {
-      switch (true) {
-        case type === "mine-location":
-          /** FIXME: 어느정도 기능 마무리 된 후 mine-location unit UI 고도화 하기 */
-          return 1.2;
-        case type === "other-user-location":
-          /** FIXME: 어느정도 기능 마무리 된 후 mine-location unit UI 고도화 하기 */
-          return 0.8;
-        case type === "empty":
-          return 0.4;
-        default:
-          return height;
-      }
-    })();
-
-    const minHeight = 0.4;
-    const maxHeight = 3;
-
-    const limitedHeight = Math.min(
-      maxHeight,
-      Math.max(minHeight, finalHeight ?? 0),
-    );
-
-    const cylinder = createCylinder(this.#scene, {
-      x,
-      z,
-      color: finalColor,
-      height: limitedHeight,
-    });
-
-    this.updateCylinderMap({
-      cylinder,
-      x,
-      z,
-      color: finalColor,
-      category:
-        type === "mine-location"
-          ? type
-          : type === "other-user-location" && !category
-            ? type
-            : category,
-      height: limitedHeight,
-    });
-
-    animationMultiThread.push({
-      type: "cylinder-create",
-      location: { x, z },
-      duration: 2,
-      progress: 0,
-      easingFuncionType: "easy-out",
-    });
-
-    if (
-      category ||
-      type === "mine-location" ||
-      (type === "other-user-location" && !category)
-    ) {
-      this.updateCategoryMap({
-        cylinder,
-        category: category ?? type,
-        x,
-        z,
-        height: limitedHeight,
-      });
-    }
-  }
-
   /** NOTE: cylinder list를 canvas에 그리는 메서드 */
   drawCylinderList() {
     this.#store.cylinderList.forEach((cylinderInfo) => {
-      const { location } = cylinderInfo;
+      const { location, category = null, type } = cylinderInfo;
       const { x, z } = location;
 
+      const finalCategory =
+        type === "mine-location"
+          ? "mine"
+          : type === "other-user-location"
+            ? "others"
+            : category;
+
       /** NOTE: map의 x.z 좌표에 cylinder가 존재하지 않으면 추가 */
-      if (this.#store.map?.[x]?.[z]?.isExist) {
+      if (this.#store.map?.[x]?.[z]) {
         return;
       }
-      this.addCylinderInScene(cylinderInfo);
-    });
-  }
+      /** FIXME: auth 값 수정 필요 */
+      const auth =
+        type === "mine-location"
+          ? "mine"
+          : type === "other-user-location"
+            ? "others"
+            : "none";
 
-  drawUser() {
-    const { user, map, animationMultiThread } = this.#store;
-    this.#bx;
-    this.#bz;
+      const cylinder = new Cylinder({
+        $canvas: this.$canvas,
+        camera: this.#camera,
+        scene: this.#scene,
+        raycaster: this.#raycaster,
+        pointer: this.#pointer,
 
-    /** NOTE: map에 user가 존재하지 않으면 추가 */
-    if (user) {
-      return;
-    }
+        auth,
+        location: { x, z },
+        category: finalCategory,
+        views: 0,
+      });
+      this.updateCylinderMap({ cylinder });
 
-    /** NOTE: map에 user가 안착할 cylinder가 없으면 return */
-    if (!map[this.#bx]?.[this.#bz]?.isExist) {
-      throw new Error("안착할 cylinder가 업습니다,");
-    }
-    const { height } = map[this.#bx]![this.#bz]!;
-
-    const { body } = createUser(this.#scene, {
-      x: this.#bx,
-      height,
-      z: this.#bz,
-    });
-    this.updateState({ user: body });
-
-    animationMultiThread.push({
-      type: "user-float",
-      location: { x: this.#bx, z: this.#bz },
-      easingFuncionType: "easy-out",
-      duration: 2.4,
-      progress: 0,
+      if (finalCategory) {
+        this.updateCategoryMap({ cylinder });
+      }
     });
   }
 
   /** NOTE: store에 존재하는 state 중 map의 특정 좌표에 cylinder를 업데이트하는 메서드 */
-  updateCylinderMap({
-    cylinder,
-    x,
-    z,
-    color,
-    category,
-    height,
-  }: UpdateCylinderMapParam) {
+  updateCylinderMap({ cylinder }: UpdateCylinderMapParam) {
     const { map } = this.#store;
+    const { x, z } = cylinder.location;
 
     if (!map[x]) {
       map[x] = {};
     }
-    if (!map[x][z]?.isExist) {
-      map[x][z] = {
-        isExist: true,
-        cylinder,
-        color,
-        category: category ?? null,
-        height,
-      };
+    if (!map[x][z]) {
+      map[x][z] = { cylinder };
     }
   }
 
   /** NOTE: store에 존재하는 state 중 category map의 특정 category에 cylinder를 업데이트하는 메서드 */
-  updateCategoryMap({
-    category,
-    x,
-    z,
-    height,
-    cylinder,
-  }: UpdateCategoryMapParam) {
+  updateCategoryMap({ cylinder }: UpdateCategoryMapParam) {
+    if (!cylinder?.category) {
+      return;
+    }
     const { categoryMap } = this.#store;
+    const { category, location } = cylinder;
+    const { x, z } = location;
     if (!categoryMap[category]) {
       categoryMap[category] = [];
     }
     if (
-      categoryMap[category].find(({ x: ox, z: oz }) => {
-        return ox === x && oz === z;
-      })
+      categoryMap[category].find(
+        ({
+          cylinder: {
+            location: { x: ox, z: oz },
+          },
+        }) => {
+          return ox === x && oz === z;
+        },
+      )
     ) {
       return;
     }
-    categoryMap[category].push({ x, z, cylinder, height });
-  }
-
-  /** NOTE: target cylinder를 reset하는 메서드 */
-  resetTargetCylinder() {
-    this.updateState({
-      targetCylinderLocation: null,
-    });
+    categoryMap[category].push({ cylinder });
   }
 
   animate() {
-    const { map, categoryMap, animationMultiThread } = this.#store;
+    const { animationMultiThread } = this.#store;
 
     const newAnimationMultiThread = animationMultiThread
       .filter((animationTask) => {
@@ -368,71 +244,10 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         return true;
       })
       .map((animationTask) => {
-        const { type, location, duration, progress, easingFuncionType } =
-          animationTask;
-        const { x, z } = location;
+        const { type, duration, progress } = animationTask;
 
         const changeRate = 1 / duration / 1 / 60; // Rate of change per frame
         const nextprogress = Math.min(progress + changeRate, 1);
-
-        const easingFunction = (() => {
-          switch (easingFuncionType) {
-            case "easy-in":
-              return easeInCubic;
-            case "easy-out":
-              return easeOutCubic;
-            default:
-              return () => {
-                return nextprogress;
-              };
-          }
-        })();
-
-        /** NOTE: cylinder 만들때 애니메이션 로직 */
-        if (type === "cylinder-create") {
-          if (!map[x]?.[z]) {
-            return { ...animationTask, isKill: true };
-          }
-
-          const { cylinder } = map[x]![z];
-          const height =
-            (cylinder.geometry.parameters.height *
-              easingFunction(nextprogress)) /
-            2;
-          cylinder.scale.set(1, easingFunction(nextprogress), 1);
-          cylinder.position.y = height;
-        }
-
-        /** NOTE: 같은 카테고리의 cylinder를 hover했을때 애니메이션 로직 */
-        if (type === "cylinder-category-hover") {
-          const { targetCategory, direct } = animationTask;
-          const nextprogress = (() => {
-            switch (direct) {
-              case "down":
-                return Math.max(progress - changeRate, 0);
-              case "up":
-              default:
-                return Math.min(progress + changeRate, 1);
-            }
-          })();
-
-          Object.entries(categoryMap).forEach(([category, cylinderList]) => {
-            if (category !== targetCategory) {
-              return;
-            }
-            cylinderList.forEach(({ cylinder, height }) => {
-              const scale = (1 + easeOutCubic(nextprogress)) / 1;
-
-              cylinder.scale.set(1, scale, 1);
-              cylinder.position.y = (height * scale) / 2;
-            });
-          });
-
-          /** NOTE: cylinder를 down 시키는 로직 */
-          if (direct === "down") {
-            return { ...animationTask, progress: nextprogress };
-          }
-        }
 
         /** NOTE: 카메라를 움직이는 로직 */
         if (type === "camera-move") {
@@ -445,13 +260,10 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           const currentControlsZ = controlsStartLocation.z;
           const currentControlsX = controlsStartLocation.x;
 
-          /** NOTE: 좌표를 camera position으로 계산하는 로직 */
-          const nx = (x - (z % 2) / 2) * 2;
-          const nz = z * Math.sqrt(Math.PI);
+          const { nx, nz } = locationToCameraPosition({ x, z });
 
           const angleX = Math.PI * 3;
           const angleZ = 6 * Math.PI;
-          // const angleZ = 0;
 
           // /** NOTE: set camera & controls */
           this.#camera.position.set(
@@ -470,38 +282,18 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           );
         }
 
-        if (type === "user-float") {
-          // console.log({ type, nextprogress });
-
-          const { user } = this.#store;
-          if (!user) {
-            return { ...animationTask, isKill: true };
-          }
-          const { location } = animationTask;
-          const { x, z } = location;
-          const { cylinder } = map[x]![z]!;
-
-          const next = nextprogress < 0.5 ? nextprogress : 1 - nextprogress;
-
-          user.position.y =
-            cylinder.geometry.parameters.height * cylinder.scale.y +
-            0.5 +
-            0.1 +
-            next;
-
-          if (nextprogress >= 1) {
-            return { ...animationTask, progress: 0 };
-          }
-        }
-
         return { ...animationTask, progress: nextprogress };
       })
       .filter((animationTask) => {
-        const { type, progress } = animationTask;
-        if (type === "cylinder-category-hover") {
-          const { direct } = animationTask;
-          if (direct === "down") {
-            return progress > 0;
+        const { type, progress, location } = animationTask;
+        if (type === "camera-move" && progress >= 1) {
+          const cameraMoveEndEvent = new CustomEvent<{
+            location: CylinderLocation;
+          }>("camera-move-end", {
+            detail: { location },
+          });
+          if (!this.user.getCurrentMoveAnimation()) {
+            this.$canvas.dispatchEvent(cameraMoveEndEvent);
           }
         }
 
@@ -511,11 +303,17 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.updateState({
       animationMultiThread: newAnimationMultiThread,
     });
+
+    Object.values(this.#store.map).forEach((xMap: ArticleMap[number]) => {
+      Object.values(xMap).forEach(({ cylinder }) => {
+        cylinder.animate();
+      });
+    });
+
+    this.user.animate();
   }
 
   onPointerMove(event: PointerEvent) {
-    const { prevHoveredCylinder } = this.#store;
-
     this.#pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     this.#pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
     this.#raycaster.setFromCamera(this.#pointer, this.#camera);
@@ -523,202 +321,59 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       this.#raycaster.intersectObjects(this.#scene.children, false)?.[0]
         ?.object ?? null;
 
-    const { type } = parseGeometryName(object);
-
-    /** NOTE: set mouse style */
-    updateMouseStyle({ $canvas: this.$canvas, object });
-
-    if (type === "cylinder") {
-      const cylinder = object as Cylinder;
-      /** NOTE: set cylinder enter & out event */
-      dispatchCylinderMouseEvent({
-        $canvas: this.$canvas,
-        prevHoveredCylinder,
-        currentHoveredCylinder: cylinder,
-      });
-      /** NOTE: update cylinder state */
-      this.updateState({
-        prevHoveredCylinder: cylinder,
-      });
-    } else {
-      /** NOTE: set cylinder enter & out event */
-      dispatchCylinderMouseEvent({
-        $canvas: this.$canvas,
-        prevHoveredCylinder,
-        currentHoveredCylinder: null,
-      });
-      /** NOTE: update cylinder state */
-      this.updateState({
-        prevHoveredCylinder: null,
-      });
+    if (!object) {
+      return;
     }
   }
 
   onCylinderEnter(event: CustomEvent<{ cylinder: Cylinder }>) {
-    const { map, animationMultiThread } = this.#store;
     const { cylinder } = event.detail;
-    const { type, x, z } = parseGeometryName(cylinder);
-    if (type !== "cylinder") {
-      return;
-    }
-    const cylinderDetail = map[x]![z]!;
-    if (!cylinderDetail) {
-      return null;
-    }
+    const { categoryMap } = this.#store;
 
-    cylinder.material.color.set(darker(cylinderDetail.color));
-    const hasAnimation = animationMultiThread.find(({ type }) => {
-      return type === "cylinder-category-hover";
-    });
-
-    if (hasAnimation) {
-      const newAnimationMultiThread = animationMultiThread.map(
-        (animationTask) => {
-          if (animationTask.type === "cylinder-category-hover") {
-            const { targetCategory } = animationTask;
-            if (cylinderDetail.category === targetCategory) {
-              return {
-                ...animationTask,
-                direct: "up" as const,
-              };
-            } else {
-              return {
-                ...animationTask,
-                direct: "down" as const,
-              };
-            }
-          }
-
-          return animationTask;
-        },
-      );
-
-      this.updateState({
-        animationMultiThread: newAnimationMultiThread,
-      });
-    } else {
-      if (cylinderDetail.category) {
-        animationMultiThread.push({
-          type: "cylinder-category-hover",
-          targetCategory: cylinderDetail.category,
-          location: { x, z },
-          duration: 1,
-          progress: 0,
-          direct: "up",
+    Object.entries(categoryMap).forEach(([category, cylinderList]) => {
+      if (!cylinder.category || !category) {
+        return;
+      }
+      if (cylinder.category === category) {
+        cylinderList.forEach(({ cylinder }) => {
+          cylinder.startUpAnimation();
         });
       }
-    }
-
-    this.updateState({
-      currentCategory: cylinderDetail.category,
     });
   }
 
   onCylinderOut(event: CustomEvent<{ cylinder: Cylinder }>) {
-    const { map, animationMultiThread } = this.#store;
     const { cylinder } = event.detail;
-    const { type, x, z } = parseGeometryName(cylinder);
-    if (type !== "cylinder") {
-      return;
-    }
+    const { categoryMap } = this.#store;
 
-    const cylinderDetail = map[x]![z]!;
+    Object.entries(categoryMap).forEach(([category, cylinderList]) => {
+      if (!cylinder.category || !category) {
+        return;
+      }
 
-    cylinder.material.color.set(cylinderDetail.color!);
-
-    const hasAnimation = animationMultiThread.find(({ type }) => {
-      return type === "cylinder-category-hover";
-    });
-
-    if (hasAnimation) {
-      const newAnimationMultiThread = animationMultiThread.map(
-        (animationTask) => {
-          if (animationTask.type === "cylinder-category-hover") {
-            return {
-              ...animationTask,
-              direct: "down" as const,
-            };
-          }
-
-          return animationTask;
-        },
-      );
-
-      this.updateState({
-        animationMultiThread: newAnimationMultiThread,
-      });
-    } else {
-      if (cylinderDetail.category) {
-        animationMultiThread.push({
-          type: "cylinder-category-hover",
-          targetCategory: cylinderDetail.category,
-          location: { x, z },
-          duration: 1,
-          progress: 1,
-          direct: "down",
+      if (cylinder.category === category) {
+        cylinderList.forEach(({ cylinder }) => {
+          cylinder.startDownAnimation();
         });
       }
-    }
-    this.updateState({
-      currentCategory: null,
     });
   }
 
-  onPointerClick() {
+  onPointerUp() {
     if (
       this.#prevCameraPosition &&
       this.#camera.position.distanceTo(this.#prevCameraPosition) > 0.01
     ) {
-      const { x, z } = this.#camera.position;
-
-      const angleX = Math.PI * 3;
-      const angleZ = 6 * Math.PI;
-      // const angleZ = 0;
-
       /** NOTE: camera position을 좌표로 계산하는 로직 */
-      const nz = Math.round((z - angleZ) / Math.sqrt(Math.PI));
-      const nx = Math.round((x - angleX) / 2 + (nz % 2) / 2);
+      const { nx, nz } = cameraPositionToLocation(this.#camera.position);
 
-      if (typeof this.#event.onCameraMoveEnd === "function") {
-        this.#event.onCameraMoveEnd({ location: { x: nx, z: nz } });
-      }
-
-      this.moveCamera({ x: nx, z: nz });
+      this.moveCameraAnimation({ x: nx, z: nz });
       return;
-    }
-
-    const { map } = this.#store;
-
-    this.#raycaster.setFromCamera(this.#pointer, this.#camera);
-    const intersects = this.#raycaster.intersectObjects(this.#scene.children);
-
-    if (!intersects[0]) {
-      return;
-    }
-
-    const object = intersects[0].object as Cylinder;
-    const { type, x, z } = parseGeometryName(object);
-    if (type === "cylinder") {
-      const cylinder = object;
-      const { category } = map[x]![z]!;
-
-      this.updateState({
-        currentSelectedCylinder: cylinder,
-      });
-
-      if (typeof this.#event.onCylinderClick === "function") {
-        this.#event.onCylinderClick({
-          object: cylinder,
-          location: { x, z },
-          category,
-        });
-      }
-      this.highlightCylinder({ cylinder });
     }
   }
 
   /** NOTE: bind to pointerdown event */
-  savePrevCameraPosition() {
+  onPointerDown() {
     this.#prevCameraPosition = {
       x: this.#camera.position.x,
       y: this.#camera.position.y,
@@ -726,7 +381,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     };
   }
 
-  moveCamera({ x, y, z }: { x: number; y?: number; z: number }) {
+  moveCameraAnimation({ x, y, z }: { x: number; y?: number; z: number }) {
     const { animationMultiThread } = this.#store;
 
     const hasAnimation = !!animationMultiThread.find(({ type }) => {
@@ -761,7 +416,8 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     } else {
       animationMultiThread.push({
         type: "camera-move",
-        duration: 1,
+        /** NOTE: user-move보다 커지면 안됨 */
+        duration: 0.5,
         easingFuncionType: "easy-out",
         progress: 0,
         location: { x, y, z },
@@ -776,10 +432,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       });
     }
     return;
-  }
-
-  highlightCylinder({ cylinder }: { cylinder: Cylinder }) {
-    console.log({ cylinder });
   }
 
   /** NOTE: render method */
@@ -798,8 +450,47 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     requestAnimationFrame(this.render);
   }
 
-  /** NOTE: remove method */
-  remove() {
-    this.#scene.remove();
+  addEvents() {
+    /** NOTE: bind event */
+    window.addEventListener("resize", this.render);
+    this.$canvas.addEventListener("pointermove", this.onPointerMove);
+    this.$canvas.addEventListener("pointerup", this.onPointerUp);
+    this.$canvas.addEventListener("pointerdown", this.onPointerDown);
+
+    /** NOTE: bind custom event */
+    this.$canvas.addEventListener("cylinder-enter", this.onCylinderEnter);
+    this.$canvas.addEventListener("cylinder-out", this.onCylinderOut);
+
+    /** NOTE: bind cylinder event */
+    Object.values(this.#store.map).forEach((xMap: ArticleMap[number]) => {
+      Object.values(xMap).forEach(({ cylinder }) => {
+        cylinder.addCylinderEvents();
+      });
+    });
+
+    /** NOTE: bind user event */
+    this.user.addUserEvents();
+  }
+
+  removeEvents() {
+    /** NOTE: remove event */
+    window.removeEventListener("resize", this.render);
+    this.$canvas.removeEventListener("pointermove", this.onPointerMove);
+    this.$canvas.removeEventListener("pointerup", this.onPointerUp);
+    this.$canvas.removeEventListener("pointerdown", this.onPointerDown);
+
+    /** NOTE: remove custom event */
+    this.$canvas.removeEventListener("cylinder-enter", this.onCylinderEnter);
+    this.$canvas.removeEventListener("cylinder-out", this.onCylinderOut);
+
+    /** NOTE: remove cylinder event */
+    Object.values(this.#store.map).forEach((xMap: ArticleMap[number]) => {
+      Object.values(xMap).forEach(({ cylinder }) => {
+        cylinder.removeCylinderEvents();
+      });
+    });
+
+    /** NOTE: remove user event */
+    this.user.removeUserEvents();
   }
 }

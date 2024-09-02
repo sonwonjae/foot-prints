@@ -1,10 +1,14 @@
 import type * as THREE from "three";
 
+import { Cylinder } from "./class/cylinder.class";
+
 /** NOTE: cylinder event type declare */
 declare global {
   interface GlobalEventHandlersEventMap {
+    "cylinder-click": CustomEvent<{ cylinder: Cylinder }>;
     "cylinder-enter": CustomEvent<{ cylinder: Cylinder }>;
     "cylinder-out": CustomEvent<{ cylinder: Cylinder }>;
+    "camera-move-end": CustomEvent<{ location: CylinderLocation }>;
   }
 }
 
@@ -25,30 +29,18 @@ export interface Article {
 export interface ArticleMap {
   [key: number]: {
     [key: number]: {
-      isExist: boolean;
-      cylinder: THREE.Mesh<
-        THREE.CylinderGeometry,
-        THREE.MeshToonMaterial,
-        THREE.Object3DEventMap
-      >;
-      color: `#${string}`;
-      category: Cateogry;
-      height: number;
+      cylinder: Cylinder;
     };
   };
 }
 
 export interface CategoryMap {
   [category: string]: Array<{
-    x: number;
-    z: number;
     cylinder: Cylinder;
-    height: number;
-    // progress: number;
   }>;
 }
 
-export type Cylinder = THREE.Mesh<
+export type CylinderObject = THREE.Mesh<
   THREE.CylinderGeometry,
   THREE.MeshToonMaterial,
   THREE.Object3DEventMap
@@ -59,79 +51,24 @@ export interface CylinderLocation {
   z: number;
 }
 
-interface TargetCylinderLocation extends CylinderLocation {
-  // progress: number;
-  cameraStartLocation: CylinderLocation;
-  controlsStartLocation: CylinderLocation;
-}
-
 type EasingFunctionType = "easy-in" | "easy-out";
 
-type AnimationTask =
-  | {
-      type: "camera-move";
-      location: { x: number; y?: number; z: number };
-      duration: number;
-      progress: number;
-      easingFuncionType?: EasingFunctionType;
-      isKill?: boolean;
-      cameraStartLocation: CylinderLocation;
-      controlsStartLocation: CylinderLocation;
-    }
-  | {
-      type: "cylinder-category-hover";
-      direct: "up" | "down";
-      targetCategory: string;
-      location: CylinderLocation;
-      duration: number;
-      progress: number;
-      isKill?: boolean;
-      easingFuncionType?: undefined;
-    }
-  | {
-      type: "cylinder-create";
-      location: CylinderLocation;
-      duration: number;
-      progress: number;
-      easingFuncionType?: EasingFunctionType;
-      isKill?: boolean;
-    }
-  | {
-      type: "user-float";
-      location: CylinderLocation;
-      duration: number;
-      progress: number;
-      isKill?: boolean;
-      easingFuncionType?: EasingFunctionType;
-    };
+type AnimationTask = {
+  type: "camera-move";
+  location: { x: number; y?: number; z: number };
+  duration: number;
+  progress: number;
+  easingFuncionType?: EasingFunctionType;
+  isKill?: boolean;
+  cameraStartLocation: CylinderLocation;
+  controlsStartLocation: CylinderLocation;
+};
 
 export interface CylinderMapStore<CylinderType> {
-  currentSelectedCylinder: Nullable<Cylinder>;
-  currentCategory: Nullable<string>;
-  prevHoveredCylinder: Nullable<Cylinder>;
   map: ArticleMap;
   categoryMap: CategoryMap;
-  targetCylinderLocation: Nullable<TargetCylinderLocation>;
   cylinderList: Array<CylinderType>;
   animationMultiThread: Array<AnimationTask>;
-  user: Nullable<THREE.Object3D<THREE.Object3DEventMap>>;
-}
-
-export interface OnCylinderClick {
-  (param: {
-    object: Cylinder;
-    location: CylinderLocation;
-    category: Nullable<string>;
-  }): void;
-}
-
-export interface OnCameraMoveEnd {
-  (param: { location: CylinderLocation }): void;
-}
-
-export interface CylinderMapEvent {
-  onCylinderClick: OnCylinderClick;
-  onCameraMoveEnd: OnCameraMoveEnd;
 }
 
 export interface DefaultCylinderType {
@@ -146,23 +83,12 @@ export interface CylinderMapConstructorParam<CylinderType> {
   cylinderList: Array<CylinderType>;
   bx?: number;
   bz?: number;
-  onCylinderClick?: OnCylinderClick;
-  onCameraMoveEnd?: OnCameraMoveEnd;
 }
 
 export interface UpdateCylinderMapParam {
   cylinder: Cylinder;
-  x: number;
-  z: number;
-  color: `#${string}`;
-  category?: Cateogry;
-  height: number;
 }
 
 export interface UpdateCategoryMapParam {
-  category: NonNullable<Cateogry>;
-  x: number;
-  z: number;
-  height: number;
   cylinder: Cylinder;
 }
