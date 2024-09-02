@@ -6,6 +6,15 @@ import { useRouter } from "next/router";
 import QueryString from "query-string";
 import { useRef, useEffect, useState, useCallback } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shad-cn/components/ui/alert-dialog";
 import { makeGetQueryOptions } from "@/utils/react-query";
 
 import { CylinderMap } from "./ArticleList.class";
@@ -17,7 +26,11 @@ function ArticleList({
 }: Omit<ComponentProps<"canvas">, "width" | "height">) {
   const [articleMap, setArticleMap] =
     useState<Nullable<CylinderMap<Article>>>(null);
+
+  const [isOpenUserFallEndModal, setIsOpenUserFallEndModal] = useState(false);
+
   const router = useRouter();
+  /** FIXME: ref는 dependency 배열에 넣어도 소용없으므로 다 빼주는 작업해주기 */
   const $canvasRef = useRef<HTMLCanvasElement>(null);
 
   const queryString = `?${QueryString.stringify({
@@ -36,7 +49,6 @@ function ArticleList({
   const onCylinderClick = ({
     detail: { cylinder },
   }: CustomEvent<{ cylinder: Cylinder }>) => {
-    console.log("cylinder click");
     const { location } = cylinder;
     const { x, z } = location;
     router.push(
@@ -64,6 +76,10 @@ function ArticleList({
     }
   };
 
+  const onUserFallEnd = () => {
+    setIsOpenUserFallEndModal(true);
+  };
+
   const throttleMoveLocation = useCallback(
     throttle(({ nx, nz }: { nx: number; nz: number }) => {
       router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
@@ -72,8 +88,6 @@ function ArticleList({
       if (!articleMap) {
         return;
       }
-
-
 
       articleMap.moveCameraAnimation({
         x: nx,
@@ -186,9 +200,11 @@ function ArticleList({
 
     $canvas.addEventListener("cylinder-click", onCylinderClick);
     $canvas.addEventListener("camera-move-end", onCameraMoveEnd);
+    $canvas.addEventListener("user-fall-end", onUserFallEnd);
     return () => {
       $canvas.removeEventListener("cylinder-click", onCylinderClick);
       $canvas.removeEventListener("camera-move-end", onCameraMoveEnd);
+      $canvas.removeEventListener("user-fall-end", onUserFallEnd);
     };
   }, [
     $canvasRef.current,
@@ -209,7 +225,50 @@ function ArticleList({
   }, [$canvasRef.current, !!articleMap, router.query.x, router.query.z]);
 
   return (
-    <canvas ref={$canvasRef} className="w-full h-full" {...props}></canvas>
+    <>
+      <canvas ref={$canvasRef} className="w-full h-full" {...props}></canvas>
+      <AlertDialog open={isOpenUserFallEndModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>안착할 땅이 없습니다.</AlertDialogTitle>
+            <AlertDialogDescription>
+              가까운 땅으로 이동하시겠어요?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                if (!articleMap) {
+                  return;
+                }
+
+                if (!locationList?.[0]?.location) {
+                  /** NOTE
+                   * 이동할 땅이 없으면 어차피 모두 리셋해야되기 때문에
+                   * router 사용하지 않고 깔끔하게 { x: 0, z: 0 } 좌표로 페이지 이동
+                   */
+                  window.location.replace(`/land/${0}/0/${0}${queryString}`);
+                  return;
+                }
+
+                const { x = 0, z = 0 } = locationList[0].location;
+                router.push(`/land/${x}/0/${z}${queryString}`, undefined, {
+                  shallow: true,
+                });
+                articleMap.moveCameraAnimation({
+                  x,
+                  z,
+                });
+                articleMap.user.reload({ x, z });
+                setIsOpenUserFallEndModal(false);
+              }}
+            >
+              이동하기
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 export default ArticleList;

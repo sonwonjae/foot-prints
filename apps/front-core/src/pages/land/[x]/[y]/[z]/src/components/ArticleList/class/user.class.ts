@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -7,7 +8,14 @@ import {
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 import { locationToCameraPosition } from "@/three/utils/location";
 
-import { easeOutCubic } from "../ArticleList.utils";
+import { easeInCubic, easeOutCubic } from "../ArticleList.utils";
+
+/** NOTE: user event type declare */
+declare global {
+  interface GlobalEventHandlersEventMap {
+    "user-fall-end": CustomEvent;
+  }
+}
 
 type UserObject = THREE.Mesh<
   THREE.SphereGeometry,
@@ -18,6 +26,7 @@ type UserObject = THREE.Mesh<
 interface UserConstructorParam {
   $canvas: HTMLCanvasElement;
   camera: THREE.PerspectiveCamera;
+  controls: OrbitControls;
   scene: THREE.Scene;
   raycaster: THREE.Raycaster;
   pointer: THREE.Vector2;
@@ -28,6 +37,12 @@ interface UserConstructorParam {
 
 interface UserCreateAnimationTask {
   type: "user-create";
+  duration: number;
+  progress: number;
+  isKill?: boolean;
+}
+interface UserFallAnimationTask {
+  type: "user-fall";
   duration: number;
   progress: number;
   isKill?: boolean;
@@ -43,7 +58,13 @@ interface UserMoveAnimationTask {
   isKill?: boolean;
 }
 
-type AnimationTask = UserCreateAnimationTask | UserMoveAnimationTask;
+type AnimationTask =
+  | UserCreateAnimationTask
+  | UserFallAnimationTask
+  | UserMoveAnimationTask;
+
+/** NOTE: 떠있는 높이 height */
+const FLOAT_HEIGHT = 50;
 
 export class User {
   /** NOTE: canvas element */
@@ -51,6 +72,9 @@ export class User {
 
   /** NOTE: THREE PerspectiveCamera */
   #camera: THREE.PerspectiveCamera;
+
+  /** NOTE: THREE OrbitControls */
+  #controls: OrbitControls;
 
   /** NOTE: THREE Scene */
   #scene: THREE.Scene;
@@ -85,6 +109,7 @@ export class User {
   constructor({
     $canvas,
     camera,
+    controls,
     scene,
     raycaster,
     pointer,
@@ -94,6 +119,7 @@ export class User {
   }: UserConstructorParam) {
     this.$canvas = $canvas;
     this.#camera = camera;
+    this.#controls = controls;
     this.#scene = scene;
     this.#raycaster = raycaster;
     this.#pointer = pointer;
@@ -106,41 +132,67 @@ export class User {
     this.addUserEvents = this.addUserEvents.bind(this);
     this.removeUserEvents = this.removeUserEvents.bind(this);
     this.animate = this.animate.bind(this);
+    this.create = this.create.bind(this);
 
-    const { x, z } = this.location;
-
-    /** NOTE: map에 user가 안착할 cylinder가 없으면 return */
-    if (!map[x]?.[z]?.cylinder) {
-      throw new Error("안착할 cylinder가 업습니다,");
-    }
-
-    const bx = (x - (z % 2) / 2) * 2;
-    const by = this.#map[x]![z]!.cylinder.height;
-    const bz = z * Math.sqrt(Math.PI);
     const bodySize = 0.5;
-
     // 몸체
     const objectGeometry = new THREE.SphereGeometry(bodySize, 32, 32);
     const objectMaterial = new THREE.MeshToonMaterial({
       color: "#F5F5FF",
     });
     const object = new THREE.Mesh(objectGeometry, objectMaterial);
-    object.castShadow = true;
-    object.position.set(bx, by + bodySize + this.#floatHeight, bz);
+    /** NOTE: 초기 생성때는 화면에서 안보이는 위치에 생성 */
+    object.position.set(9999, 9999, 9999);
     this.#scene.add(object);
     this.object = object;
 
-    /** NOTE: 등장 애니메이션 push */
-    this.#animationMultiThread.push({
-      type: "user-create",
-      duration: 2.4,
-      progress: 0,
-    });
+    this.create(this.location);
+  }
+
+  create({ x, z }: CylinderLocation) {
+    this.location = { x, z };
+    const bx = (x - (z % 2) / 2) * 2;
+    /** NOTE: 안착할 cylinder가 없으면 하늘 위에 떠있음 */
+    const by = this.#map[x]?.[z]?.cylinder.height ?? FLOAT_HEIGHT;
+    const bz = z * Math.sqrt(Math.PI);
+    const bodySize = 0.5;
+
+    this.object.castShadow = true;
+    this.object.position.set(bx, by + bodySize + this.#floatHeight, bz);
+
+    if (this.#map[x]?.[z]?.cylinder) {
+      /** NOTE: 안착할 cylinder가 있으면 등장 애니메이션 push */
+      this.#animationMultiThread.push({
+        type: "user-create",
+        duration: 1.2,
+        progress: 0,
+      });
+      this.isCreated = true;
+    } else {
+      /** NOTE: 안착할 cylinder가 없으면 controls 사용 불가 */
+      this.#controls.enabled = false;
+      /** NOTE: 안착할 cylinder가 없으면 떨어지는 애니메이션 push */
+      this.#animationMultiThread.push({
+        type: "user-fall",
+        duration: 3.5,
+        progress: 0,
+      });
+    }
+  }
+
+  reload({ x, z }: CylinderLocation) {
+    this.#controls.enabled = true;
+    this.#animationMultiThread = [];
+    this.create({ x, z });
   }
 
   onCameraMoveEnd({
     detail: { location: nextLocation },
   }: CustomEvent<{ location: CylinderLocation }>) {
+    /** NOTE: 유저가 생성되지 않았으면 method 실행 불가 */
+    if (!this.isCreated) {
+      return;
+    }
     console.log("camera-move", nextLocation);
   }
 
@@ -148,6 +200,10 @@ export class User {
     nextLocation: CylinderLocation,
     moveBy: UserMoveAnimationTask["moveBy"] = "pointer",
   ) {
+    /** NOTE: 유저가 생성되지 않았으면 method 실행 불가 */
+    if (!this.isCreated) {
+      return;
+    }
     if (
       this.location.x === nextLocation.x &&
       this.location.z === nextLocation.z
@@ -161,8 +217,8 @@ export class User {
         );
       },
     ) as UserMoveAnimationTask | undefined;
-    /** NOTE: 이동 애니메이션 push */
 
+    /** NOTE: 이동 애니메이션 push */
     this.#animationMultiThread.push({
       id: uuidv4(),
       moveBy,
@@ -195,24 +251,33 @@ export class User {
   }
 
   animate() {
-    const newAnimationMultiThread = this.#animationMultiThread
-      .filter(({ type, isKill }) => {
-        /** NOTE: 이미 cylinder가 만들어져 있으면 kill */
-        if (type === "user-create" && this.isCreated) {
-          return false;
-        }
+    if (
+      this.#animationMultiThread.filter(({ type }) => {
+        return type === "user-create";
+      }).length > 1
+    ) {
+      throw new Error("user는 두 번 이상 만들수 없습니다.");
+    }
 
+    const newAnimationMultiThread = this.#animationMultiThread
+      .filter(({ isKill }) => {
         return !isKill;
       })
       .map((animationTask, _, animationMultiThread) => {
         const { type, duration, progress } = animationTask;
 
+        const changeRate = 1 / duration / 1 / 60; // Rate of change per frame
+        const nextprogress = Math.min(progress + changeRate, 1);
+
+        if (type === "user-fall") {
+          this.object.position.y =
+            FLOAT_HEIGHT - FLOAT_HEIGHT * easeInCubic(nextprogress) * 3;
+          return { ...animationTask, progress: nextprogress };
+        }
+
         if (!this.#map[this.location.x]?.[this.location.z]?.cylinder) {
           return animationTask;
         }
-
-        const changeRate = 1 / duration / 1 / 60; // Rate of change per frame
-        const nextprogress = Math.min(progress + changeRate, 1);
 
         if (type === "user-create") {
           const magnification =
@@ -220,7 +285,7 @@ export class User {
             animationMultiThread.find(({ type }) => {
               return type === "user-move";
             })
-              ? 10
+              ? 5
               : 1;
           const nextprogress = Math.min(
             progress + changeRate * magnification,
@@ -248,6 +313,9 @@ export class User {
         }
 
         if (type === "user-move") {
+          if (!this.isCreated) {
+            return animationTask;
+          }
           if (
             this.#currentMoveAnimationTaskId &&
             animationTask.id !== this.#currentMoveAnimationTaskId
@@ -292,6 +360,14 @@ export class User {
       })
       .filter((animationTask, index, animationMultiThread) => {
         const { type, progress } = animationTask;
+
+        if (type === "user-fall" && progress >= 1) {
+          const userFallEndEvent = new CustomEvent<{
+            location: CylinderLocation;
+          }>("user-fall-end");
+          this.$canvas.dispatchEvent(userFallEndEvent);
+        }
+
         /** NOTE: user가 다 만들어졌으면 this.isCreated 상태 업데이트 */
         if (type === "user-create" && progress >= 1) {
           this.isCreated = true;

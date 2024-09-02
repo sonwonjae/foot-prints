@@ -129,6 +129,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.user = new User({
       $canvas: this.$canvas,
       camera: this.#camera,
+      controls: this.#controls,
       scene: this.#scene,
       raycaster: this.#raycaster,
       pointer: this.#pointer,
