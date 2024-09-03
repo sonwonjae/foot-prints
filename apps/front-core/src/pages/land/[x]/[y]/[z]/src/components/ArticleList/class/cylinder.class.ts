@@ -152,7 +152,7 @@ export class Cylinder {
     /** NOTE: 등장 애니메이션 push */
     this.#animationMultiThread.push({
       type: "cylinder-create",
-      duration: 2,
+      duration: 0.5,
       progress: 0,
     });
   }
@@ -161,7 +161,7 @@ export class Cylinder {
     /** NOTE: 클릭이 아닌 드래그 중이라는 뜻 */
     if (
       this.#prevCameraPosition &&
-      this.#camera.position.distanceTo(this.#prevCameraPosition) > 0.01
+      this.#camera.position.distanceTo(this.#prevCameraPosition) > 0.1
     ) {
       return;
     }

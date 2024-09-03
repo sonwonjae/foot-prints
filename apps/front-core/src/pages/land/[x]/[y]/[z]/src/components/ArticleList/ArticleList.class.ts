@@ -374,7 +374,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   onPointerUp() {
     if (
       this.#prevCameraPosition &&
-      this.#camera.position.distanceTo(this.#prevCameraPosition) > 0.01
+      this.#camera.position.distanceTo(this.#prevCameraPosition) > 0.1
     ) {
       /** NOTE: camera position을 좌표로 계산하는 로직 */
       const { nx, nz } = cameraPositionToLocation(this.#camera.position);

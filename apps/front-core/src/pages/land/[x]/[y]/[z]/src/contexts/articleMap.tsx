@@ -28,7 +28,6 @@ export function ArticleMapProvider({ children }: PropsWithChildren) {
         "articleMap 초기세팅은 articleMap이 존재할때 호출할 수 없습니다!",
       );
     }
-    console.log({ newArticleMap });
 
     setArticleMap(newArticleMap);
   };

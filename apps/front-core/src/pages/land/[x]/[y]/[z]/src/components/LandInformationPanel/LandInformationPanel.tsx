@@ -4,8 +4,10 @@ import {
   FlagTriangleRightIcon,
   LoaderIcon,
   DoorOpenIcon,
+  RedoIcon,
 } from "lucide-react";
 import { useRouter } from "next/router";
+import QueryString from "query-string";
 
 import { Button } from "@/shad-cn/components/ui/button";
 import {
@@ -17,11 +19,21 @@ import {
 import { apiAxios, makeGetQueryOptions } from "@/utils/react-query";
 import { cn } from "@/utils/tailwindcss";
 
+import { useArticleMapContext } from "../../contexts/articleMap";
+
 function LandInformationPanel() {
   const router = useRouter();
-  const showPanel =
-    !Number.isNaN(Number(router.query.sx)) &&
-    !Number.isNaN(Number(router.query.sz));
+  const { articleMap } = useArticleMapContext();
+
+  const queryString = `?${QueryString.stringify({
+    range: router.query.range,
+    sx: router.query.sx,
+    sz: router.query.sz,
+  })}`;
+
+  const sx = Number(router.query.sx);
+  const sz = Number(router.query.sz);
+  const showPanel = !Number.isNaN(Number(sx)) && !Number.isNaN(Number(sz));
 
   const locationQuery = makeGetQueryOptions({
     url: `/api/locations/${Number(router.query.sx)}/${Number(router.query.sz)}`,
@@ -43,7 +55,9 @@ function LandInformationPanel() {
       });
     },
   });
-  const moveUnit = async () => {
+
+  /** FIXME: 네이밍 더 적절하게 수정 필요 */
+  const actionUnit = async () => {
     if (isLocationLoading) {
       return;
     }
@@ -63,11 +77,36 @@ function LandInformationPanel() {
     return null;
   }
 
+  const moveUnit = () => {
+    if (!articleMap) {
+      return;
+    }
+
+    const location = { x: sx, z: sz };
+    const isExistCylinder = !!articleMap.checkCylinder({ x: sx, z: sz });
+
+    if (!isExistCylinder) {
+      return;
+    }
+
+    if (isExistCylinder) {
+      router.push(`/land/${sx}/0/${sz}${queryString}`, undefined, {
+        shallow: true,
+      });
+
+      articleMap.moveCameraAnimation(location);
+
+      articleMap.user.move(location, "keyboard");
+    } else {
+      articleMap.user.vibrate();
+    }
+  };
+
   return (
     <div
       className={cn(
         "absolute",
-        "top-4",
+        "bottom-4",
         "right-4",
         "flex",
         "flex-col",
@@ -106,7 +145,7 @@ function LandInformationPanel() {
           <TooltipTrigger asChild>
             <Button
               size="icon"
-              onClick={moveUnit}
+              onClick={actionUnit}
               disabled={isLocationLoading}
               className={cn("relative")}
             >
@@ -147,6 +186,21 @@ function LandInformationPanel() {
               "놀러가기"}
             {!isLocationLoading && location?.type === "empty" && "개척하기"}
           </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <TooltipProvider>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              onClick={moveUnit}
+              disabled={isLocationLoading}
+              className={cn("relative")}
+            >
+              <RedoIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>이동하기</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

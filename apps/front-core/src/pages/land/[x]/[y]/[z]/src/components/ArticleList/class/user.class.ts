@@ -332,12 +332,22 @@ export class User {
         }
 
         if (type === "user-vibrate") {
+          if (
+            animationMultiThread.find(({ type }) => {
+              return type === "user-move";
+            })
+          ) {
+            return animationTask;
+          }
+
+          const VIBRATE_POWER = 10;
+
           const next =
             (easeOutCubic(
               nextprogress < 0.5 ? nextprogress : 1 - nextprogress,
             ) *
-              ((round(progress, 1) * 5) % 2 ? 1 : -1)) /
-            12;
+              ((round(progress, 1) * VIBRATE_POWER) % 2 ? 1 : -1)) /
+            (VIBRATE_POWER * 1.5);
 
           const { nx, nz } = locationToCameraPosition(this.location);
 

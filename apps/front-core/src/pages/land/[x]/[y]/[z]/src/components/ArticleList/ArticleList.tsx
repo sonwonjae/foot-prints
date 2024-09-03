@@ -5,6 +5,7 @@ import { throttle } from "es-toolkit";
 import { useRouter } from "next/router";
 import QueryString from "query-string";
 import { useRef, useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -27,8 +28,6 @@ function ArticleList({
   ...props
 }: Omit<ComponentProps<"canvas">, "width" | "height">) {
   const { articleMap, initArticleMap } = useArticleMapContext();
-
-  console.log({ articleMap });
 
   const [isOpenUserFallEndModal, setIsOpenUserFallEndModal] = useState(false);
 
@@ -54,6 +53,7 @@ function ArticleList({
   }: CustomEvent<{ cylinder: Cylinder }>) => {
     const { location } = cylinder;
     const { x, z } = location;
+
     router.push(
       `${window.location.pathname}${`?${QueryString.stringify({
         ...QueryString.parse(queryString),
@@ -86,27 +86,20 @@ function ArticleList({
         return;
       }
 
-      const isExistCylinder = !!articleMap.checkCylinder({ x: nx, z: nz });
+      const nextLocation = { x: nx, z: nz };
+      const isExistCylinder = !!articleMap.checkCylinder(nextLocation);
 
       if (isExistCylinder) {
         router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
           shallow: true,
         });
 
-        articleMap.moveCameraAnimation({
-          x: nx,
-          z: nz,
-        });
+        articleMap.moveCameraAnimation(nextLocation);
 
-        articleMap.user.move(
-          {
-            x: nx,
-            z: nz,
-          },
-          "keyboard",
-        );
+        articleMap.user.move(nextLocation, "keyboard");
       } else {
         articleMap.user.vibrate();
+        toast.error("이동할 땅이 없습니다!");
       }
     }, 350),
     [!!articleMap],
@@ -188,6 +181,8 @@ function ArticleList({
     $canvasRef.current,
     !!articleMap,
     locationListQuery.baseKey,
+    router.query.x,
+    router.query.z,
     router.query.range,
     router.query.sx,
     router.query.sz,
