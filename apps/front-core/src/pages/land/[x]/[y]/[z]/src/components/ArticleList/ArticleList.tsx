@@ -17,15 +17,18 @@ import {
 } from "@/shad-cn/components/ui/alert-dialog";
 import { makeGetQueryOptions } from "@/utils/react-query";
 
+import { useArticleMapContext } from "../../contexts/articleMap";
+
 import { CylinderMap } from "./ArticleList.class";
-import { Article, CylinderLocation } from "./ArticleList.type";
+import { CylinderLocation } from "./ArticleList.type";
 import { Cylinder } from "./class/cylinder.class";
 
 function ArticleList({
   ...props
 }: Omit<ComponentProps<"canvas">, "width" | "height">) {
-  const [articleMap, setArticleMap] =
-    useState<Nullable<CylinderMap<Article>>>(null);
+  const { articleMap, initArticleMap } = useArticleMapContext();
+
+  console.log({ articleMap });
 
   const [isOpenUserFallEndModal, setIsOpenUserFallEndModal] = useState(false);
 
@@ -71,10 +74,6 @@ function ArticleList({
     router.push(`/land/${x}/0/${z}${queryString}`, undefined, {
       shallow: true,
     });
-    /** FIXME: 카메라 이동할때 user도 이동시킬지는 고민 필요 */
-    // if (articleMap?.user) {
-    //   articleMap.user.move({ x, z });
-    // }
   };
 
   const onUserFallEnd = () => {
@@ -162,7 +161,7 @@ function ArticleList({
       bx: Number(router.query.x),
       bz: Number(router.query.z),
     });
-    setArticleMap(cylinderMap);
+    initArticleMap(cylinderMap);
 
     /** NOTE: render three */
     requestAnimationFrame(cylinderMap.render);
@@ -184,9 +183,6 @@ function ArticleList({
 
     return () => {
       articleMap.removeEvents();
-
-      /** NOTE: remove three */
-      // articleMap.remove();
     };
   }, [
     $canvasRef.current,
