@@ -4,7 +4,7 @@ import type {
   CustomIncomingMessage,
 } from "@/middlewares/pages/type";
 
-import QueryString from "query-string";
+import qs from "query-string";
 
 export const checkSingleQuery = <
   Req extends CustomIncomingMessage & { query: Query },
@@ -178,7 +178,7 @@ export const checkSingleQuery = <
         [queryName]: singleQueryValidation[queryName],
       };
 
-      const validQueryString = `?${QueryString.stringify(validQuery)}`;
+      const validQueryString = `?${qs.stringify(validQuery)}`;
 
       return {
         redirect: {

@@ -3,8 +3,8 @@ import type { ComponentProps } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { throttle } from "es-toolkit";
 import { useRouter } from "next/router";
-import QueryString from "query-string";
-import { useRef, useEffect, useState, useCallback } from "react";
+import qs from "query-string";
+import { useRef, useEffect, useState, useCallback, useId } from "react";
 import { toast } from "sonner";
 
 import {
@@ -18,7 +18,8 @@ import {
 } from "@/shad-cn/components/ui/alert-dialog";
 import { makeGetQueryOptions } from "@/utils/react-query";
 
-import { useArticleMapContext } from "../../contexts/articleMap";
+import { articleMapStore, useArticleMap } from "../../stores/articleMap";
+import { useUser } from "../../stores/user";
 
 import { CylinderMap } from "./ArticleList.class";
 import { CylinderLocation } from "./ArticleList.type";
@@ -27,7 +28,9 @@ import { Cylinder } from "./class/cylinder.class";
 function ArticleList({
   ...props
 }: Omit<ComponentProps<"canvas">, "width" | "height">) {
-  const { articleMap, initArticleMap } = useArticleMapContext();
+  const id = useId();
+  const { articleMap } = useArticleMap();
+  const { user } = useUser();
 
   const [isOpenUserFallEndModal, setIsOpenUserFallEndModal] = useState(false);
 
@@ -35,7 +38,34 @@ function ArticleList({
   /** FIXME: ref는 dependency 배열에 넣어도 소용없으므로 다 빼주는 작업해주기 */
   const $canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const queryString = `?${QueryString.stringify({
+  useEffect(() => {
+    if (!$canvasRef.current) {
+      return;
+    }
+
+    if (!articleMap) {
+      return;
+    }
+
+    /** remove prev articleMap */
+    articleMap.cancelRender();
+
+    /** NOTE: reset three */
+    const $canvas = $canvasRef.current;
+    const cylinderMap = new CylinderMap({
+      $canvas,
+      cylinderList: locationList || [],
+      bx: Number(router.query.x),
+      bz: Number(router.query.z),
+    });
+
+    articleMapStore.initArticleMap(cylinderMap);
+
+    /** NOTE: render three */
+    cylinderMap.render();
+  }, [id]);
+
+  const queryString = `?${qs.stringify({
     range: router.query.range,
     sx: router.query.sx,
     sz: router.query.sz,
@@ -55,8 +85,8 @@ function ArticleList({
     const { x, z } = location;
 
     router.push(
-      `${window.location.pathname}${`?${QueryString.stringify({
-        ...QueryString.parse(queryString),
+      `${window.location.pathname}${`?${qs.stringify({
+        ...qs.parse(queryString),
         sx: x,
         sz: z,
       })}`}`,
@@ -86,7 +116,7 @@ function ArticleList({
         return;
       }
 
-      if (articleMap.user.isMoving) {
+      if (user?.isMoving) {
         return;
       }
 
@@ -100,13 +130,13 @@ function ArticleList({
 
         articleMap.moveCameraAnimation(nextLocation);
 
-        articleMap.user.move(nextLocation, "keyboard");
+        user?.move(nextLocation, "keyboard");
       } else {
-        articleMap.user.vibrate();
+        user?.vibrate();
         toast.error("이동할 땅이 없습니다!");
       }
     }, 550),
-    [!!articleMap],
+    [articleMap],
   );
 
   const moveUserWithArrowKey = (e: KeyboardEvent) => {
@@ -118,8 +148,11 @@ function ArticleList({
     if (!articleMap) {
       return;
     }
+    if (!user) {
+      return;
+    }
 
-    const { x, z } = articleMap.user.location;
+    const { x, z } = user.location;
 
     switch (key) {
       case "ARROWUP":
@@ -157,14 +190,14 @@ function ArticleList({
     const $canvas = $canvasRef.current;
     const cylinderMap = new CylinderMap({
       $canvas,
-      cylinderList: locationList,
+      cylinderList: locationList || [],
       bx: Number(router.query.x),
       bz: Number(router.query.z),
     });
-    initArticleMap(cylinderMap);
+    articleMapStore.initArticleMap(cylinderMap);
 
     /** NOTE: render three */
-    requestAnimationFrame(cylinderMap.render);
+    cylinderMap.render();
   }, [!!articleMap, $canvasRef.current, !!locationList]);
 
   /** NOTE: articleMap store update */
@@ -264,7 +297,7 @@ function ArticleList({
                   x,
                   z,
                 });
-                articleMap.user.reload({ x, z });
+                user?.reload({ x, z });
                 setIsOpenUserFallEndModal(false);
               }}
             >

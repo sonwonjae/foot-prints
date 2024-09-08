@@ -3,7 +3,7 @@ import type { LandTypeXYZReq } from "@/pages/land/[x]/[y]/[z]/src/types/page.typ
 
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import QueryString from "query-string";
+import qs from "query-string";
 
 import { makeGetQueryOptions } from "@/utils/react-query";
 
@@ -13,7 +13,7 @@ export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
 
   const queryClient = new QueryClient();
 
-  const queryString = `?${QueryString.stringify({
+  const queryString = `?${qs.stringify({
     range: req.query.range,
   })}`;
 

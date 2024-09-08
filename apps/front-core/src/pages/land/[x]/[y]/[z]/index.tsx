@@ -2,8 +2,7 @@ import { HydrationBoundary } from "@tanstack/react-query";
 
 import { cn } from "@/utils/tailwindcss";
 
-import { ArticleList, LandInformationPanel } from "./src/components";
-import { ArticleMapProvider } from "./src/contexts/articleMap";
+import { ArticleList, ToolsMenubar } from "./src/components";
 import { middleware } from "./src/middleware";
 import { LandTypeXYZPageProps } from "./src/types/page.types";
 
@@ -14,12 +13,10 @@ export default function LandTypeXYZPage({
 }: LandTypeXYZPageProps) {
   return (
     <HydrationBoundary state={dehydratedState}>
-      <ArticleMapProvider>
-        <main className={cn("w-screen", "h-screen", "relative")}>
-          <ArticleList />
-          <LandInformationPanel />
-        </main>
-      </ArticleMapProvider>
+      <main className={cn("w-screen", "h-screen", "relative")}>
+        <ArticleList />
+        <ToolsMenubar />
+      </main>
     </HydrationBoundary>
   );
 }

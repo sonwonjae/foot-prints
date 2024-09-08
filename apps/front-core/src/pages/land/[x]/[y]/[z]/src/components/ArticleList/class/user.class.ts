@@ -9,6 +9,7 @@ import {
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 import { locationToCameraPosition } from "@/three/utils/location";
 
+import { userStore } from "../../../stores/user";
 import { easeInCubic, easeOutCubic } from "../ArticleList.utils";
 
 /** NOTE: user event type declare */
@@ -133,6 +134,8 @@ export class User {
     this.#pointer = pointer;
     this.#map = map;
     this.location = location;
+    /** FIXME: location 업데이트하는 로직 이렇게 써도 될지 고민 좀 더 해봐야됨 */
+    userStore.changeUserLocation(this.location);
 
     this.onCameraMoveEnd = this.onCameraMoveEnd.bind(this);
     this.move = this.move.bind(this);
@@ -159,7 +162,10 @@ export class User {
   }
 
   create({ x, z }: CylinderLocation) {
-    this.location = { x, z };
+    /** FIXME: location 업데이트하는 로직 이렇게 써도 될지 고민 좀 더 해봐야됨 */
+    // this.location = { x, z };
+    userStore.changeUserLocation({ x, z });
+
     const bx = (x - (z % 2) / 2) * 2;
     /** NOTE: 안착할 cylinder가 없으면 하늘 위에 떠있음 */
     const by = this.#map[x]?.[z]?.cylinder.height ?? FLOAT_HEIGHT;
@@ -426,7 +432,9 @@ export class User {
         if (type === "user-move" && progress >= 1) {
           const { nextLocation } = animationTask;
           /** NOTE: 위치 변경 */
-          this.location = nextLocation;
+          /** FIXME: location 업데이트하는 로직 이렇게 써도 될지 고민 좀 더 해봐야됨 */
+          // this.location = nextLocation;
+          userStore.changeUserLocation(nextLocation);
           this.isMoving = !!animationMultiThread.find(
             (innerAnimationTask, innerIndex) => {
               if (innerIndex <= index) {

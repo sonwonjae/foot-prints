@@ -6,6 +6,8 @@ import {
   locationToCameraPosition,
 } from "@/three/utils/location";
 
+import { userStore } from "../../stores/user";
+
 import {
   CylinderMapStore,
   DefaultCylinderType,
@@ -25,6 +27,7 @@ import {
 } from "./ArticleList.utils";
 import { Cylinder } from "./class/cylinder.class";
 import { User } from "./class/user.class";
+
 export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: CylinderMap instance state */
   #store: CylinderMapStore<CylinderType> = {
@@ -39,6 +42,9 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
   /** NOTE: THREE WebGLRenderer */
   #renderer: THREE.WebGLRenderer;
+
+  /** NOTE: requestAnimationFrame에서 return 받은 id 값 */
+  #animationFrameId: number = 0;
 
   /** NOTE: THREE PerspectiveCamera */
   #camera: THREE.PerspectiveCamera;
@@ -63,8 +69,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
   #prevCameraPosition: Nullable<{ x: number; y: number; z: number }> = null;
 
-  user: User;
-
   constructor({
     $canvas,
     cylinderList,
@@ -83,6 +87,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.onCylinderOut = this.onCylinderOut.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
     this.render = this.render.bind(this);
+    this.cancelRender = this.cancelRender.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
     this.moveCameraAnimation = this.moveCameraAnimation.bind(this);
     this.addEvents = this.addEvents.bind(this);
@@ -127,7 +132,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.moveCameraAnimation({ x: this.#bx, y: 8 * Math.PI, z: this.#bz });
 
     /** NOTE: create user */
-    this.user = new User({
+    const user = new User({
       $canvas: this.$canvas,
       camera: this.#camera,
       controls: this.#controls,
@@ -138,6 +143,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       map: this.#store.map,
       location: { x: this.#bx, z: this.#bz },
     });
+    userStore.initUser(user);
   }
 
   /** NOTE: store에 존재하는 state를 업데이트하는 메서드 */
@@ -304,7 +310,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
           }>("camera-move-end", {
             detail: { location },
           });
-          if (!this.user.getCurrentMoveAnimation()) {
+          if (!userStore.user?.getCurrentMoveAnimation()) {
             this.$canvas.dispatchEvent(cameraMoveEndEvent);
           }
         }
@@ -322,7 +328,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
       });
     });
 
-    this.user.animate();
+    userStore.user?.animate();
   }
 
   onPointerMove(event: PointerEvent) {
@@ -459,7 +465,11 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
     this.#renderer.render(this.#scene, this.#camera);
 
-    requestAnimationFrame(this.render);
+    this.#animationFrameId = requestAnimationFrame(this.render);
+  }
+
+  cancelRender() {
+    window.cancelAnimationFrame(this.#animationFrameId);
   }
 
   addEvents() {
@@ -481,7 +491,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     });
 
     /** NOTE: bind user event */
-    this.user.addUserEvents();
+    userStore.user?.addUserEvents();
   }
 
   removeEvents() {
@@ -503,6 +513,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     });
 
     /** NOTE: remove user event */
-    this.user.removeUserEvents();
+    userStore.user?.removeUserEvents();
   }
 }
