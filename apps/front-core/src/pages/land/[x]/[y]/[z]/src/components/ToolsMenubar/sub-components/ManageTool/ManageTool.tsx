@@ -13,6 +13,7 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from "@/shad-cn/components/ui/menubar";
+import { Skeleton } from "@/shad-cn/components/ui/skeleton";
 import { makeGetQueryOptions } from "@/utils/react-query";
 import { cn } from "@/utils/tailwindcss";
 
@@ -85,7 +86,10 @@ function ManageTool() {
           onPointerEnter={() => {}}
           onPointerOut={() => {}}
         >
-          <span>나의 위치</span>
+          {isUserLocationInfoLoading && (
+            <Skeleton className={cn("w-14", "h-5")} />
+          )}
+          {!isUserLocationInfoLoading && <span>나의 위치</span>}
           <MenubarShortcut>
             <FootprintsIcon size={14} />
           </MenubarShortcut>
@@ -100,7 +104,10 @@ function ManageTool() {
           onPointerEnter={() => {}}
           onPointerOut={() => {}}
         >
-          <span>선택한 위치</span>
+          {isSelectedLocationInfoLoading && (
+            <Skeleton className={cn("w-14", "h-5")} />
+          )}
+          {!isSelectedLocationInfoLoading && <span>선택한 위치</span>}
           <MenubarShortcut>
             <MousePointerClickIcon size={14} />
           </MenubarShortcut>

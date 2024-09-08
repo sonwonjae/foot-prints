@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 
 import { Menubar } from "@/shad-cn/components/ui/menubar";
 import { cn } from "@/utils/tailwindcss";
