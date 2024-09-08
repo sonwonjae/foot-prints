@@ -1,4 +1,9 @@
-import { RedoIcon, CameraIcon, MousePointerClickIcon } from "lucide-react";
+import {
+  RedoIcon,
+  CameraIcon,
+  MousePointerClickIcon,
+  FootprintsIcon,
+} from "lucide-react";
 import { useRouter } from "next/router";
 import qs from "query-string";
 
@@ -82,6 +87,18 @@ function MoveTool() {
         <span>이동하기</span>
       </MenubarTrigger>
       <MenubarContent align="end" loop>
+        <MenubarItem
+          disabled={ux === cx && uz === cz}
+          className={cn("cursor-pointer")}
+          onClick={move({ x: ux, z: uz })}
+          onPointerEnter={() => {}}
+          onPointerOut={() => {}}
+        >
+          <span>나의 위치</span>
+          <MenubarShortcut>
+            <FootprintsIcon size={14} />
+          </MenubarShortcut>
+        </MenubarItem>
         <MenubarItem
           disabled={
             (ux === cx && uz === cz) ||
