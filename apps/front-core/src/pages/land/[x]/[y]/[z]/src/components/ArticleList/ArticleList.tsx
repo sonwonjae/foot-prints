@@ -86,6 +86,10 @@ function ArticleList({
         return;
       }
 
+      if (articleMap.user.isMoving) {
+        return;
+      }
+
       const nextLocation = { x: nx, z: nz };
       const isExistCylinder = !!articleMap.checkCylinder(nextLocation);
 
@@ -101,18 +105,21 @@ function ArticleList({
         articleMap.user.vibrate();
         toast.error("이동할 땅이 없습니다!");
       }
-    }, 350),
+    }, 550),
     [!!articleMap],
   );
 
-  const moveCameraWithArrowKey = (e: KeyboardEvent) => {
+  const moveUserWithArrowKey = (e: KeyboardEvent) => {
+    if (e.currentTarget !== e.target) {
+      return;
+    }
     const key = e.key.toUpperCase();
 
     if (!articleMap) {
       return;
     }
-    const x = Number(router.query.x);
-    const z = Number(router.query.z);
+
+    const { x, z } = articleMap.user.location;
 
     switch (key) {
       case "ARROWUP":
@@ -215,10 +222,10 @@ function ArticleList({
 
   /** NOTE: bind keyboard event */
   useEffect(() => {
-    window.addEventListener("keydown", moveCameraWithArrowKey);
+    document.body.addEventListener("keydown", moveUserWithArrowKey);
 
     return () => {
-      window.removeEventListener("keydown", moveCameraWithArrowKey);
+      document.body.removeEventListener("keydown", moveUserWithArrowKey);
     };
   }, [$canvasRef.current, !!articleMap, router.query.x, router.query.z]);
 
