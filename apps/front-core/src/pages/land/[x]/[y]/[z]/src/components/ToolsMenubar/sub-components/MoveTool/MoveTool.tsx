@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/router";
 import qs from "query-string";
+import { PointerEvent } from "react";
 
 import {
   MenubarContent,
@@ -75,24 +76,54 @@ function MoveTool() {
     };
   };
 
+  const floatUp = (targetLocation: CylinderLocation) => {
+    return (e: PointerEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      if (!articleMap) {
+        return;
+      }
+      const cylinder = articleMap.checkCylinder(targetLocation);
+      if (!cylinder) {
+        return;
+      }
+      cylinder.floatUp();
+    };
+  };
+
+  const floatDown = (targetLocation: CylinderLocation) => {
+    return (e: PointerEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      if (!articleMap) {
+        return;
+      }
+      const cylinder = articleMap.checkCylinder(targetLocation);
+      if (!cylinder) {
+        return;
+      }
+      cylinder.floatDown();
+    };
+  };
+
+  const toggle = () => {
+    toggleOpendMenu(MENU_VALUE_LIST[1]);
+  };
+
   return (
     <MenubarMenu value={MENU_VALUE_LIST[1]}>
       <MenubarTrigger
         className={cn("cursor-pointer", "flex", "gap-1", "items-center")}
-        onClick={() => {
-          toggleOpendMenu(MENU_VALUE_LIST[1]);
-        }}
+        onClick={toggle}
       >
         <RedoIcon size={14} />
         <span>이동하기</span>
       </MenubarTrigger>
-      <MenubarContent align="end" loop>
+      <MenubarContent align="end" loop onEscapeKeyDown={toggle}>
         <MenubarItem
           disabled={ux === cx && uz === cz}
           className={cn("cursor-pointer")}
           onClick={move({ x: ux, z: uz })}
-          onPointerEnter={() => {}}
-          onPointerOut={() => {}}
+          onPointerEnter={floatUp({ x: ux, z: uz })}
+          onPointerLeave={floatDown({ x: ux, z: uz })}
         >
           <span>나의 위치</span>
           <MenubarShortcut>
@@ -100,14 +131,11 @@ function MoveTool() {
           </MenubarShortcut>
         </MenubarItem>
         <MenubarItem
-          disabled={
-            (ux === cx && uz === cz) ||
-            !articleMap?.checkCylinder({ x: cx, z: cz })
-          }
+          disabled={ux === cx && uz === cz}
           className={cn("cursor-pointer")}
           onClick={move({ x: cx, z: cz })}
-          onPointerEnter={() => {}}
-          onPointerOut={() => {}}
+          onPointerEnter={floatUp({ x: cx, z: cz })}
+          onPointerLeave={floatDown({ x: cx, z: cz })}
         >
           <span>카메라 위치</span>
           <MenubarShortcut>
@@ -121,8 +149,8 @@ function MoveTool() {
           }
           className={cn("cursor-pointer")}
           onClick={move({ x: sx, z: sz })}
-          onPointerEnter={() => {}}
-          onPointerOut={() => {}}
+          onPointerEnter={floatUp({ x: sx, z: sz })}
+          onPointerLeave={floatDown({ x: sx, z: sz })}
         >
           <span>선택한 위치</span>
           <MenubarShortcut>

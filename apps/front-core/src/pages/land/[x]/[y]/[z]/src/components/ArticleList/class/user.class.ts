@@ -96,6 +96,7 @@ export class User {
 
   /** NOTE: float height */
   #floatHeight = 0.1 as const;
+  #bodySize = 0.5 as const;
 
   /** NOTE: user가 모든 애니메이션까지 끝마치고 만들어졌는지 확인하는 boolean */
   isCreated: boolean = false;
@@ -146,13 +147,13 @@ export class User {
     this.animate = this.animate.bind(this);
     this.create = this.create.bind(this);
 
-    const bodySize = 0.5;
     // 몸체
-    const objectGeometry = new THREE.SphereGeometry(bodySize, 32, 32);
+    const objectGeometry = new THREE.SphereGeometry(this.#bodySize, 32, 32);
     const objectMaterial = new THREE.MeshToonMaterial({
       color: "#F5F5FF",
     });
     const object = new THREE.Mesh(objectGeometry, objectMaterial);
+    object.animations;
     /** NOTE: 초기 생성때는 화면에서 안보이는 위치에 생성 */
     object.position.set(9999, 9999, 9999);
     this.#scene.add(object);
@@ -170,10 +171,9 @@ export class User {
     /** NOTE: 안착할 cylinder가 없으면 하늘 위에 떠있음 */
     const by = this.#map[x]?.[z]?.cylinder.height ?? FLOAT_HEIGHT;
     const bz = z * Math.sqrt(Math.PI);
-    const bodySize = 0.5;
 
     this.object.castShadow = true;
-    this.object.position.set(bx, by + bodySize + this.#floatHeight, bz);
+    this.object.position.set(bx, by + this.#bodySize + this.#floatHeight, bz);
 
     if (this.#map[x]?.[z]?.cylinder) {
       /** NOTE: 안착할 cylinder가 있으면 등장 애니메이션 push */
@@ -327,7 +327,11 @@ export class User {
           );
 
           this.object.position.y =
-            cylinder.height * cylinder.object.scale.y + 0.5 + 0.1 + next;
+            cylinder.object.position.y +
+            cylinder.height * cylinder.object.scale.y +
+            this.#bodySize +
+            this.#floatHeight +
+            next;
 
           if (nextprogress >= 1) {
             this.isFloating = false;
@@ -387,13 +391,17 @@ export class User {
           const { cylinder: prevCylinder } =
             this.#map[prevLocation.x]![prevLocation.z]!;
           const py =
-            prevCylinder.height * prevCylinder.object.scale.y + 0.5 + 0.1;
+            prevCylinder.height * prevCylinder.object.scale.y +
+            this.#bodySize +
+            this.#floatHeight;
 
           const { nx, nz } = locationToCameraPosition(nextLocation);
           const { cylinder: nextCylinder } =
             this.#map[nextLocation.x]![nextLocation.z]!;
           const ny =
-            nextCylinder.height * nextCylinder.object.scale.y + 0.5 + 0.1;
+            nextCylinder.height * nextCylinder.object.scale.y +
+            this.#bodySize +
+            this.#floatHeight;
 
           this.object.position.x = px + (nx - px) * easeOutCubic(nextprogress);
           this.object.position.y =

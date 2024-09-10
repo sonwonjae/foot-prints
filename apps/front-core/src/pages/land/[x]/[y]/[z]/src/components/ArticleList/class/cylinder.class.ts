@@ -6,8 +6,11 @@ import type {
 
 import * as THREE from "three";
 
-import { easeOutCubic } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.utils";
-import { convertStringToHexColor } from "@/three/utils/color";
+import {
+  easeInCubic,
+  easeOutCubic,
+} from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.utils";
+import { convertStringToHexColor, darker, lighter } from "@/three/utils/color";
 
 interface CylinderConstructorParam {
   $canvas: HTMLCanvasElement;
@@ -37,6 +40,18 @@ type AnimationTask =
     }
   | {
       type: "cylinder-down";
+      duration: number;
+      progress: number;
+      isKill?: boolean;
+    }
+  | {
+      type: "cylinder-float-up";
+      duration: number;
+      progress: number;
+      isKill?: boolean;
+    }
+  | {
+      type: "cylinder-float-down";
       duration: number;
       progress: number;
       isKill?: boolean;
@@ -70,7 +85,7 @@ export class Cylinder {
 
   object: CylinderObject;
   height: number;
-  color: `#${string}${string}${string}`;
+  color: `#${string}`;
   category: Cateogry = null;
   auth: "mine" | "others" | "none";
   location: CylinderLocation;
@@ -99,6 +114,10 @@ export class Cylinder {
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
+    this.onCylinderEnter = this.onCylinderEnter.bind(this);
+    this.floatUp = this.floatUp.bind(this);
+    this.floatDown = this.floatDown.bind(this);
+    this.onCylinderOut = this.onCylinderOut.bind(this);
     this.addCylinderEvents = this.addCylinderEvents.bind(this);
     this.removeCylinderEvents = this.removeCylinderEvents.bind(this);
     this.startUpAnimation = this.startUpAnimation.bind(this);
@@ -125,12 +144,12 @@ export class Cylinder {
           return "#E6E6FA";
         case auth === "others" && !this.category:
           /** FIXME: 어느정도 기능 마무리 된 후 others unit UI 고도화 하기 */
-          return "#33FF57";
+          return lighter("#96BF00", 30);
         case !!this.category:
           return convertStringToHexColor(this.category);
         case auth === "none":
         default:
-          return "#FFFFFF";
+          return lighter("#96BF00", 50);
       }
     })();
 
@@ -138,7 +157,9 @@ export class Cylinder {
     const geometry = new THREE.CylinderGeometry(1, 1, this.height, 6, 1);
 
     /** FIXME: color 값 로직 수정 필요 */
-    const material = new THREE.MeshToonMaterial({ color: this.color });
+    const material = new THREE.MeshToonMaterial({
+      color: this.color,
+    });
 
     const object = new THREE.Mesh(geometry, material);
     object.receiveShadow = true; // 바닥이 그림자를 받을 수 있도록 설정
@@ -236,16 +257,103 @@ export class Cylinder {
     }
   }
 
+  floatUp() {
+    const hasFloatUpAnimation = !!this.#animationMultiThread.find(
+      ({ type }) => {
+        return type === "cylinder-float-up";
+      },
+    );
+
+    if (hasFloatUpAnimation) {
+      return;
+    }
+
+    let currentProgress = 0;
+
+    const newAnimationMultiThread = this.#animationMultiThread.filter(
+      (animationTask) => {
+        if (animationTask.type === "cylinder-float-down") {
+          const { progress } = animationTask;
+          currentProgress = progress;
+        }
+        return animationTask.type !== "cylinder-float-down";
+      },
+    );
+    this.#animationMultiThread = newAnimationMultiThread;
+
+    this.#animationMultiThread.push({
+      type: "cylinder-float-up",
+      duration: 0.5,
+      progress: currentProgress,
+    });
+  }
+  floatDown() {
+    const hasFloatDownAnimation = !!this.#animationMultiThread.find(
+      ({ type }) => {
+        return type === "cylinder-float-down";
+      },
+    );
+
+    if (hasFloatDownAnimation) {
+      return;
+    }
+
+    let currentProgress = 1;
+
+    const newAnimationMultiThread = this.#animationMultiThread.filter(
+      (animationTask) => {
+        if (animationTask.type === "cylinder-float-up") {
+          const { progress } = animationTask;
+          currentProgress = progress;
+        }
+        return animationTask.type !== "cylinder-float-up";
+      },
+    );
+    this.#animationMultiThread = newAnimationMultiThread;
+
+    this.#animationMultiThread.push({
+      type: "cylinder-float-down",
+      duration: 1,
+      progress: currentProgress,
+    });
+  }
+
+  onCylinderEnter(event: CustomEvent<{ cylinder: Cylinder }>) {
+    const { cylinder } = event.detail;
+    if (
+      cylinder.location.x !== this.location.x ||
+      cylinder.location.z !== this.location.z
+    ) {
+      return;
+    }
+    this.floatUp();
+  }
+
+  onCylinderOut(event: CustomEvent<{ cylinder: Cylinder }>) {
+    const { cylinder } = event.detail;
+    if (
+      cylinder.location.x !== this.location.x ||
+      cylinder.location.z !== this.location.z
+    ) {
+      return;
+    }
+    this.floatDown();
+  }
+
   addCylinderEvents() {
     this.$canvas.addEventListener("pointermove", this.onPointerMove);
     this.$canvas.addEventListener("pointerup", this.onPointerUp);
     this.$canvas.addEventListener("pointerdown", this.onPointerDown);
+    this.$canvas.addEventListener("cylinder-enter", this.onCylinderEnter);
+    this.$canvas.addEventListener("cylinder-out", this.onCylinderOut);
   }
 
   removeCylinderEvents() {
     this.$canvas.removeEventListener("pointermove", this.onPointerMove);
     this.$canvas.removeEventListener("pointerup", this.onPointerUp);
     this.$canvas.removeEventListener("pointerdown", this.onPointerDown);
+    this.$canvas.removeEventListener("cylinder-enter", this.onCylinderEnter);
+    this.$canvas.removeEventListener("cylinder-out", this.onCylinderOut);
   }
 
   startUpAnimation() {
@@ -364,11 +472,36 @@ export class Cylinder {
           return { ...animationTask, progress: nextprogress };
         }
 
+        /** NOTE: cylinder를 float 시키는 로직 */
+        if (type === "cylinder-float-up") {
+          const nextprogress = Math.min(progress + changeRate, 1);
+          this.object.position.y =
+            this.height / 2 + easeInCubic(nextprogress) / 2;
+
+          this.object.material.color.set(
+            darker(this.color, -30 * nextprogress),
+          );
+          return { ...animationTask, progress: nextprogress };
+        }
+
+        /** NOTE: cylinder를 float 시키는 로직 */
+        if (type === "cylinder-float-down") {
+          const nextprogress = Math.max(progress - changeRate, 0);
+
+          this.object.position.y =
+            this.height / 2 + easeInCubic(nextprogress) / 2;
+          this.object.material.color.set(
+            darker(this.color, -30 * nextprogress),
+          );
+
+          return { ...animationTask, progress: nextprogress };
+        }
+
         return { ...animationTask, progress: nextprogress };
       })
       .filter((animationTask) => {
         const { type, progress } = animationTask;
-        if (type === "cylinder-down") {
+        if (type === "cylinder-down" || type === "cylinder-float-down") {
           return progress > 0;
         }
 

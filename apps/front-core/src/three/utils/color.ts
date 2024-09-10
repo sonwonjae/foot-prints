@@ -61,7 +61,7 @@ export const lighter = (hex: `#${string}`, amount: number = 30) => {
   }
   const pureHex = hex.replace(/^#/, "");
 
-  return `#${pureHex.replace(/../g, updateHexPiece(amount))}`;
+  return `#${pureHex.replace(/../g, updateHexPiece(amount))}` as const;
 };
 
 export const darker = (hex: `#${string}`, amount: number = -30) => {
@@ -70,5 +70,5 @@ export const darker = (hex: `#${string}`, amount: number = -30) => {
   }
   const pureHex = hex.replace(/^#/, "");
 
-  return `#${pureHex.replace(/../g, updateHexPiece(amount))}`;
+  return `#${pureHex.replace(/../g, updateHexPiece(amount))}` as const;
 };

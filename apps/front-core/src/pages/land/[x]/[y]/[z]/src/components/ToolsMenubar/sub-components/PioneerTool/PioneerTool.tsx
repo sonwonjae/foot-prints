@@ -5,6 +5,7 @@ import {
   MousePointerClickIcon,
 } from "lucide-react";
 import { useRouter } from "next/router";
+import { PointerEvent } from "react";
 
 import {
   MenubarContent,
@@ -17,11 +18,13 @@ import { Skeleton } from "@/shad-cn/components/ui/skeleton";
 import { apiAxios, makeGetQueryOptions } from "@/utils/react-query";
 import { cn } from "@/utils/tailwindcss";
 
+import { useArticleMap } from "../../../../stores/articleMap";
 import { useUser } from "../../../../stores/user";
 import { CylinderLocation } from "../../../ArticleList/ArticleList.type";
 import { MENU_VALUE_LIST, useMenubarContext } from "../../contexts/menubar";
 
 function PioneerTool() {
+  const { articleMap } = useArticleMap();
   const { openedMenu, toggleOpendMenu } = useMenubarContext();
 
   const router = useRouter();
@@ -71,18 +74,48 @@ function PioneerTool() {
     };
   };
 
+  const floatUp = (targetLocation: CylinderLocation) => {
+    return (e: PointerEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      if (!articleMap) {
+        return;
+      }
+      const cylinder = articleMap.checkCylinder(targetLocation);
+      if (!cylinder) {
+        return;
+      }
+      cylinder.floatUp();
+    };
+  };
+
+  const floatDown = (targetLocation: CylinderLocation) => {
+    return (e: PointerEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      if (!articleMap) {
+        return;
+      }
+      const cylinder = articleMap.checkCylinder(targetLocation);
+      if (!cylinder) {
+        return;
+      }
+      cylinder.floatDown();
+    };
+  };
+
+  const toggle = () => {
+    toggleOpendMenu(MENU_VALUE_LIST[0]);
+  };
+
   return (
     <MenubarMenu value={MENU_VALUE_LIST[0]}>
       <MenubarTrigger
         className={cn("cursor-pointer", "flex", "gap-1", "items-center")}
-        onClick={() => {
-          toggleOpendMenu(MENU_VALUE_LIST[0]);
-        }}
+        onClick={toggle}
       >
         <PickaxeIcon size={14} />
         <span>정복하기</span>
       </MenubarTrigger>
-      <MenubarContent align="end" loop>
+      <MenubarContent align="end" loop onEscapeKeyDown={toggle}>
         <MenubarItem
           disabled={
             userLocationInfo?.type === "mine-location" ||
@@ -90,8 +123,8 @@ function PioneerTool() {
           }
           className={cn("cursor-pointer")}
           onClick={pioneer({ x: ux, z: uz })}
-          onPointerEnter={() => {}}
-          onPointerOut={() => {}}
+          onPointerEnter={floatUp({ x: ux, z: uz })}
+          onPointerLeave={floatDown({ x: ux, z: uz })}
         >
           {isUserLocationInfoLoading && (
             <Skeleton className={cn("w-14", "h-5")} />
@@ -108,8 +141,8 @@ function PioneerTool() {
           }
           className={cn("cursor-pointer")}
           onClick={pioneer({ x: sx, z: sz })}
-          onPointerEnter={() => {}}
-          onPointerOut={() => {}}
+          onPointerEnter={floatUp({ x: sx, z: sz })}
+          onPointerLeave={floatDown({ x: sx, z: sz })}
         >
           {isSelectedLocationInfoLoading && (
             <Skeleton className={cn("w-14", "h-5")} />

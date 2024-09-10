@@ -17,15 +17,9 @@ import {
   ArticleMap,
   CylinderLocation,
 } from "./ArticleList.type";
-import {
-  createRenderer,
-  easeOutCubic,
-  initCamera,
-  initControls,
-  initLight,
-  resize,
-} from "./ArticleList.utils";
+import { easeOutCubic, resize } from "./ArticleList.utils";
 import { Cylinder } from "./class/cylinder.class";
+import { System } from "./class/system/system.class";
 import { User } from "./class/user.class";
 
 export class CylinderMap<CylinderType extends DefaultCylinderType> {
@@ -99,31 +93,15 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.#bx = bx ?? 0;
     this.#bz = bz ?? 0;
 
-    /** NOTE: create renderer */
-    this.#renderer = createRenderer({ $canvas: this.$canvas });
-
-    /** NOTE: create camera * set camera */
-    this.#camera = initCamera({ $canvas: this.$canvas });
-
-    /** NOTE: create controls * set controls */
-    this.#controls = initControls({
-      camera: this.#camera,
-      $canvas: this.$canvas,
-    });
-
-    /** NOTE: create scene * set scene in camera */
-    this.#scene = new THREE.Scene();
-    // this.#scene.fog = new THREE.FogExp2("#FFFFFF", 0.02);
-    this.#scene.background = new THREE.Color("#FFFFFF");
-
-    this.#camera.lookAt(this.#scene.position);
-
-    /** NOTE: create light * set light in scene */
-    initLight({ scene: this.#scene });
-
-    /** NOTE: create raycaster & pointer */
-    this.#raycaster = new THREE.Raycaster();
-    this.#pointer = new THREE.Vector2();
+    /** NOTE: set system */
+    const { renderer, camera, controls, scene, raycaster, pointer } =
+      new System({ $canvas: this.$canvas });
+    this.#renderer = renderer;
+    this.#camera = camera;
+    this.#controls = controls;
+    this.#scene = scene;
+    this.#raycaster = raycaster;
+    this.#pointer = pointer;
 
     /** NOTE: create fill cylinder list */
     this.drawCylinderList();
@@ -345,36 +323,38 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   }
 
   onCylinderEnter(event: CustomEvent<{ cylinder: Cylinder }>) {
-    const { cylinder } = event.detail;
-    const { categoryMap } = this.#store;
+    console.log(event);
+    // const { cylinder } = event.detail;
+    // const { categoryMap } = this.#store;
 
-    Object.entries(categoryMap).forEach(([category, cylinderList]) => {
-      if (!cylinder.category || !category) {
-        return;
-      }
-      if (cylinder.category === category) {
-        cylinderList.forEach(({ cylinder }) => {
-          cylinder.startUpAnimation();
-        });
-      }
-    });
+    // Object.entries(categoryMap).forEach(([category, cylinderList]) => {
+    //   if (!cylinder.category || !category) {
+    //     return;
+    //   }
+    //   if (cylinder.category === category) {
+    //     cylinderList.forEach(({ cylinder }) => {
+    //       cylinder.startUpAnimation();
+    //     });
+    //   }
+    // });
   }
 
   onCylinderOut(event: CustomEvent<{ cylinder: Cylinder }>) {
-    const { cylinder } = event.detail;
-    const { categoryMap } = this.#store;
+    console.log(event);
+    // const { cylinder } = event.detail;
+    // const { categoryMap } = this.#store;
 
-    Object.entries(categoryMap).forEach(([category, cylinderList]) => {
-      if (!cylinder.category || !category) {
-        return;
-      }
+    // Object.entries(categoryMap).forEach(([category, cylinderList]) => {
+    //   if (!cylinder.category || !category) {
+    //     return;
+    //   }
 
-      if (cylinder.category === category) {
-        cylinderList.forEach(({ cylinder }) => {
-          cylinder.startDownAnimation();
-        });
-      }
-    });
+    //   if (cylinder.category === category) {
+    //     cylinderList.forEach(({ cylinder }) => {
+    //       cylinder.startDownAnimation();
+    //     });
+    //   }
+    // });
   }
 
   onPointerUp() {
