@@ -8,17 +8,25 @@ import qs from "query-string";
 import { makeGetQueryOptions } from "@/utils/react-query";
 
 export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
-  const { x = "0", z = "0" } = req.params || {};
-  const { sx, sz } = req.query || {};
+  const x = Number(req.params?.x);
+  const z = Number(req.params?.z);
+  const sx = Number(req.query?.x);
+  const sz = Number(req.query?.z);
+  const range = Number(req.query?.range);
 
   const queryClient = new QueryClient();
 
   const queryString = `?${qs.stringify({
-    range: req.query.range,
+    range,
+    sx,
+    sz,
   })}`;
 
+  const fx = x - (x % range);
+  const fz = z - (z % range);
+
   const locationListQuery = makeGetQueryOptions({
-    url: `/api/locations/list/${Number(x)}/${Number(z)}${queryString}`,
+    url: `/api/locations/list/${fx}/${fz}${queryString}`,
   });
   const locationListQueryOptions = locationListQuery.getQueryOptionsInServer();
 

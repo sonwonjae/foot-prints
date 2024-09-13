@@ -96,7 +96,7 @@ export class User {
 
   /** NOTE: float height */
   #floatHeight = 0.1 as const;
-  #bodySize = 0.5 as const;
+  #bodySize = 0.3 as const;
 
   /** NOTE: user가 모든 애니메이션까지 끝마치고 만들어졌는지 확인하는 boolean */
   isCreated: boolean = false;
@@ -167,15 +167,31 @@ export class User {
     // this.location = { x, z };
     userStore.changeUserLocation({ x, z });
 
-    const bx = (x - (z % 2) / 2) * 2;
+    const { nx: bx, nz: bz } = locationToCameraPosition({ x, z });
     /** NOTE: 안착할 cylinder가 없으면 하늘 위에 떠있음 */
     const by = this.#map[x]?.[z]?.cylinder.height ?? FLOAT_HEIGHT;
-    const bz = z * Math.sqrt(Math.PI);
 
     this.object.castShadow = true;
-    this.object.position.set(bx, by + this.#bodySize + this.#floatHeight, bz);
 
     if (this.#map[x]?.[z]?.cylinder) {
+      /** FIXME: 공통화 필요 */
+      const cylinder = this.#map[x]?.[z]?.cylinder;
+      const angleInRadians = 90 * (Math.PI / 180);
+
+      const lx =
+        cylinder.object.geometry.parameters.radiusTop *
+        0.75 *
+        Math.cos(angleInRadians);
+      const lz =
+        cylinder.object.geometry.parameters.radiusTop *
+        0.75 *
+        Math.sin(angleInRadians);
+
+      const fx = bx + lx;
+      const fy = by + this.#bodySize + this.#floatHeight;
+      const fz = bz + lz;
+      this.object.position.set(fx, fy, fz);
+
       /** NOTE: 안착할 cylinder가 있으면 등장 애니메이션 push */
       this.#animationMultiThread.push({
         type: "user-create",
@@ -184,6 +200,11 @@ export class User {
       });
       this.isCreated = true;
     } else {
+      const lx = bx;
+      const ly = by + this.#bodySize + this.#floatHeight;
+      const lz = bz;
+      this.object.position.set(lx, ly, lz);
+
       /** NOTE: 안착할 cylinder가 없으면 controls 사용 불가 */
       this.#controls.enabled = false;
       /** NOTE: 안착할 cylinder가 없으면 떨어지는 애니메이션 push */
@@ -331,7 +352,7 @@ export class User {
             cylinder.height * cylinder.object.scale.y +
             this.#bodySize +
             this.#floatHeight +
-            next;
+            next / 2;
 
           if (nextprogress >= 1) {
             this.isFloating = false;
@@ -361,8 +382,21 @@ export class User {
 
           const { nx, nz } = locationToCameraPosition(this.location);
 
-          this.object.position.x = nx - next;
-          this.object.position.z = nz + next;
+          /** FIXME: 공통화 필요 */
+          const { cylinder } = this.#map[this.location.x]![this.location.z]!;
+
+          const angleInRadians = 90 * (Math.PI / 180);
+          const lx =
+            cylinder.object.geometry.parameters.radiusTop *
+            0.75 *
+            Math.cos(angleInRadians);
+          const lz =
+            cylinder.object.geometry.parameters.radiusTop *
+            0.75 *
+            Math.sin(angleInRadians);
+
+          this.object.position.x = nx - next + lx;
+          this.object.position.z = nz + next + lz;
         }
 
         if (type === "user-move") {
@@ -390,6 +424,9 @@ export class User {
           const { nx: px, nz: pz } = locationToCameraPosition(prevLocation);
           const { cylinder: prevCylinder } =
             this.#map[prevLocation.x]![prevLocation.z]!;
+
+          const angleInRadians = 90 * (Math.PI / 180);
+
           const py =
             prevCylinder.height * prevCylinder.object.scale.y +
             this.#bodySize +
@@ -398,19 +435,33 @@ export class User {
           const { nx, nz } = locationToCameraPosition(nextLocation);
           const { cylinder: nextCylinder } =
             this.#map[nextLocation.x]![nextLocation.z]!;
+
+          /** FIXME: 공통화 필요 */
+          const lx =
+            nextCylinder.object.geometry.parameters.radiusTop *
+            0.75 *
+            Math.cos(angleInRadians);
+          const lz =
+            nextCylinder.object.geometry.parameters.radiusTop *
+            0.75 *
+            Math.sin(angleInRadians);
           const ny =
             nextCylinder.height * nextCylinder.object.scale.y +
             this.#bodySize +
             this.#floatHeight;
 
-          this.object.position.x = px + (nx - px) * easeOutCubic(nextprogress);
+          const JUMP_HEIGHT = 5;
+
+          this.object.position.x =
+            px + (nx - px) * easeOutCubic(nextprogress) + lx;
           this.object.position.y =
             py +
             (ny - py) * easeOutCubic(nextprogress) +
             (easeOutCubic(nextprogress) < 0.5
-              ? easeOutCubic(nextprogress) * 3
-              : (1 - easeOutCubic(nextprogress)) * 3);
-          this.object.position.z = pz + (nz - pz) * easeOutCubic(nextprogress);
+              ? easeOutCubic(nextprogress) * JUMP_HEIGHT
+              : (1 - easeOutCubic(nextprogress)) * JUMP_HEIGHT);
+          this.object.position.z =
+            pz + (nz - pz) * easeOutCubic(nextprogress) + lz;
         }
 
         return { ...animationTask, progress: nextprogress };
@@ -433,8 +484,20 @@ export class User {
         /** NOTE: vibrate가 끝났으면 위치 원상복구 */
         if (type === "user-vibrate" && progress >= 1) {
           const { nx, nz } = locationToCameraPosition(this.location);
-          this.object.position.x = nx;
-          this.object.position.z = nz;
+          /** FIXME: 공통화 필요 */
+          const { cylinder } = this.#map[this.location.x]![this.location.z]!;
+
+          const angleInRadians = 90 * (Math.PI / 180);
+          const lx =
+            cylinder.object.geometry.parameters.radiusTop *
+            0.75 *
+            Math.cos(angleInRadians);
+          const lz =
+            cylinder.object.geometry.parameters.radiusTop *
+            0.75 *
+            Math.sin(angleInRadians);
+          this.object.position.x = nx + lx;
+          this.object.position.z = nz + lz;
         }
 
         if (type === "user-move" && progress >= 1) {

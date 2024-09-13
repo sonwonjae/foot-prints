@@ -107,7 +107,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.drawCylinderList();
 
     /** NOTE: set init target cylinder location  */
-    this.moveCameraAnimation({ x: this.#bx, y: 8 * Math.PI, z: this.#bz });
+    this.moveCameraAnimation({ x: this.#bx, y: 3 * Math.PI, z: this.#bz });
 
     /** NOTE: create user */
     const user = new User({
@@ -167,7 +167,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
         auth,
         location: { x, z },
         category: finalCategory,
-        views: 0,
       });
       this.updateCylinderMap({ cylinder });
 

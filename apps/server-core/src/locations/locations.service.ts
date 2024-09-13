@@ -65,10 +65,10 @@ export class LocationsService {
         users__locations ( userId )
         `,
       )
-      .gte('x', x - Math.floor(range / 2))
-      .lte('x', x + Math.floor(range / 2))
-      .gte('z', z - Math.floor(range / 2))
-      .lte('z', z + Math.floor(range / 2));
+      .gte('x', x)
+      .lte('x', x + Math.floor(range))
+      .gte('z', z)
+      .lte('z', z + Math.floor(range));
 
     return (locations || []).map((location) => {
       /** NOTE: users__locations는 무조건 하나만 존재해야 함 */

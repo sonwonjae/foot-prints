@@ -35,6 +35,13 @@ function ArticleList({
   const [isOpenUserFallEndModal, setIsOpenUserFallEndModal] = useState(false);
 
   const router = useRouter();
+
+  const sx = Number(router.query.sx);
+  const sz = Number(router.query.sz);
+  const x = Number(router.query.x);
+  const z = Number(router.query.z);
+  const range = Number(router.query.range);
+
   /** FIXME: ref는 dependency 배열에 넣어도 소용없으므로 다 빼주는 작업해주기 */
   const $canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -55,8 +62,8 @@ function ArticleList({
     const cylinderMap = new CylinderMap({
       $canvas,
       cylinderList: locationList || [],
-      bx: Number(router.query.x),
-      bz: Number(router.query.z),
+      bx: x,
+      bz: z,
     });
 
     articleMapStore.initArticleMap(cylinderMap);
@@ -66,13 +73,16 @@ function ArticleList({
   }, [id]);
 
   const queryString = `?${qs.stringify({
-    range: router.query.range,
-    sx: router.query.sx,
-    sz: router.query.sz,
+    range,
+    sx,
+    sz,
   })}`;
 
+  const fx = x - (x % range);
+  const fz = z - (z % range);
+
   const locationListQuery = makeGetQueryOptions({
-    url: `/api/locations/list/${Number(router.query.x)}/${Number(router.query.z)}${queryString}`,
+    url: `/api/locations/list/${fx}/${fz}${queryString}`,
   });
   const { data: locationList } = useQuery(
     locationListQuery.getQueryOptionsInClient(),

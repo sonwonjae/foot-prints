@@ -5,12 +5,18 @@ import type {
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
 import * as THREE from "three";
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 import {
   easeInCubic,
   easeOutCubic,
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.utils";
-import { convertStringToHexColor, darker, lighter } from "@/three/utils/color";
+import { darker, lighter } from "@/three/utils/color";
+import {
+  DEFAULT_MAGNIFICATION,
+  locationToCameraPosition,
+} from "@/three/utils/location";
 
 interface CylinderConstructorParam {
   $canvas: HTMLCanvasElement;
@@ -22,7 +28,6 @@ interface CylinderConstructorParam {
   auth: "mine" | "others" | "none";
   location: CylinderLocation;
   category: Cateogry;
-  views: number;
 }
 
 type AnimationTask =
@@ -100,7 +105,6 @@ export class Cylinder {
     auth,
     location,
     category,
-    views,
   }: CylinderConstructorParam) {
     this.$canvas = $canvas;
     this.#camera = camera;
@@ -124,37 +128,17 @@ export class Cylinder {
     this.startDownAnimation = this.startDownAnimation.bind(this);
     this.animate = this.animate.bind(this);
 
-    this.height = (() => {
-      switch (true) {
-        case auth === "mine":
-          /** FIXME: 어느정도 기능 마무리 된 후 mine unit UI 고도화 하기 */
-          return 1.2 + views / 100;
-        case auth === "others":
-          /** FIXME: 어느정도 기능 마무리 된 후 others unit UI 고도화 하기 */
-          return 0.8 + views / 100;
-        case auth === "none":
-        default:
-          return 0.4 + views / 100;
-      }
-    })();
-    this.color = (() => {
-      switch (true) {
-        case this.auth === "mine":
-          /** FIXME: 어느정도 기능 마무리 된 후 mine unit UI 고도화 하기 */
-          return "#E6E6FA";
-        case auth === "others" && !this.category:
-          /** FIXME: 어느정도 기능 마무리 된 후 others unit UI 고도화 하기 */
-          return lighter("#96BF00", 30);
-        case !!this.category:
-          return convertStringToHexColor(this.category);
-        case auth === "none":
-        default:
-          return lighter("#96BF00", 50);
-      }
-    })();
+    this.height = 0.3;
+    this.color = lighter("#96BF00", 50);
 
     /** NOTE: create cylinder object */
-    const geometry = new THREE.CylinderGeometry(1, 1, this.height, 6, 1);
+    const geometry = new THREE.CylinderGeometry(
+      1 * DEFAULT_MAGNIFICATION + 0.05 * DEFAULT_MAGNIFICATION,
+      1 * DEFAULT_MAGNIFICATION + 0.05 * DEFAULT_MAGNIFICATION,
+      this.height,
+      6,
+      1,
+    );
 
     /** FIXME: color 값 로직 수정 필요 */
     const material = new THREE.MeshToonMaterial({
@@ -162,13 +146,235 @@ export class Cylinder {
     });
 
     const object = new THREE.Mesh(geometry, material);
+    const { nx, nz } = locationToCameraPosition(location);
+
     object.receiveShadow = true; // 바닥이 그림자를 받을 수 있도록 설정
-    object.position.x = (location.x - (location.z % 2) / 2) * 2;
+    object.position.x = nx;
     object.position.y = this.height / 2;
-    object.position.z = location.z * Math.sqrt(Math.PI);
+    object.position.z = nz;
     object.scale.set(1, 1, 1);
+    object.castShadow = true;
     this.#scene.add(object);
     this.object = object;
+
+    /** FIXME: 구조물 테스트임 */
+    const gltfLoader = new GLTFLoader();
+
+    /** NOTE: tree */
+    gltfLoader.load(
+      "/tree/base.glb",
+      async (gltf) => {
+        // 각도를 라디안으로 변환
+        const angleInRadians = -60 * (Math.PI / 180);
+
+        gltf.scene.castShadow = true;
+        gltf.scene.position.x =
+          object.geometry.parameters.radiusTop * 0.5 * Math.cos(angleInRadians);
+        gltf.scene.position.y = object.geometry.parameters.height;
+        gltf.scene.position.z =
+          object.geometry.parameters.radiusTop * 0.5 * Math.sin(angleInRadians);
+
+        const children =
+          (gltf.scene.children[0]?.children as Array<THREE.Mesh>) || [];
+
+        const treeTrunk = children[0];
+        const leaveBunch1 = children[1];
+        const leaveBunch2 = children[2];
+
+        if (treeTrunk?.material) {
+          treeTrunk.material = new THREE.MeshToonMaterial({
+            color: lighter("#8B4513"),
+          });
+        }
+
+        if (leaveBunch1?.material) {
+          leaveBunch1.material = new THREE.MeshToonMaterial({
+            color: lighter("#96BF00", 30),
+          });
+        }
+
+        if (leaveBunch2?.material) {
+          leaveBunch2.material = new THREE.MeshToonMaterial({
+            color: lighter("#96BF00", 30),
+          });
+        }
+
+        gltf.scene.position.y = object.geometry.parameters.height;
+        gltf.scene.scale.set(0.25, 0.25, 0.25);
+        object.add(gltf.scene);
+      },
+      undefined,
+      (error) => {
+        console.error(error);
+      },
+    );
+    const baseAngleInRadians = -60 * (Math.PI / 180);
+
+    const fbxLoader = new FBXLoader();
+
+    /** NOTE: flat한 rock */
+    fbxLoader.load("/rock/flat_1.fbx", (fbx) => {
+      // 각도를 라디안으로 변환
+
+      const flatRock = fbx.children[0] as THREE.Mesh | undefined;
+
+      if (!flatRock) {
+        return;
+      }
+
+      flatRock.castShadow = true;
+      flatRock.position.x =
+        object.geometry.parameters.radiusTop *
+        0.25 *
+        Math.cos(baseAngleInRadians);
+      flatRock.position.y = object.geometry.parameters.height - 0.125;
+      flatRock.position.z =
+        object.geometry.parameters.radiusTop *
+        0.25 *
+        Math.sin(baseAngleInRadians);
+
+      flatRock.scale.set(0.0025, 0.0025, 0.0025);
+
+      flatRock.material = new THREE.MeshToonMaterial({
+        color: lighter("#8B4513", 99),
+      });
+
+      object.add(flatRock);
+    });
+
+    fbxLoader.load("/rock/small_1.fbx", (fbx) => {
+      // 각도를 라디안으로 변환
+
+      const smallRock = fbx.children[0] as THREE.Mesh | undefined;
+
+      if (!smallRock) {
+        return;
+      }
+
+      const count = 6;
+      for (let i = 1; i <= count; i += 1) {
+        const clonedSmallRock = smallRock.clone();
+
+        const angleInRadians = i * (360 / count) * (Math.PI / 180);
+        const bx =
+          object.geometry.parameters.radiusTop *
+          0.25 *
+          Math.cos(baseAngleInRadians);
+        const bz =
+          object.geometry.parameters.radiusTop *
+          0.25 *
+          Math.sin(baseAngleInRadians);
+
+        const radius = 0.4;
+
+        const fx = bx + radius * Math.cos(angleInRadians);
+        const fz = bz + radius * Math.sin(angleInRadians);
+
+        clonedSmallRock.castShadow = true;
+        clonedSmallRock.position.x = fx;
+        clonedSmallRock.position.y = object.geometry.parameters.height;
+        clonedSmallRock.position.z = fz;
+
+        clonedSmallRock.scale.set(0.0025, 0.0025, 0.0025);
+
+        clonedSmallRock.material = new THREE.MeshToonMaterial({
+          color: lighter("#8B4513", 90),
+        });
+
+        object.add(clonedSmallRock);
+      }
+    });
+
+    /** NOTE: capsule */
+    const radius = 3;
+    const length = 8;
+    const segment = 6;
+    const capsule = new THREE.Group();
+
+    const capsuleTop = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        radius,
+        segment,
+        360,
+        0,
+        Math.PI * 2,
+        Math.PI / 2,
+        Math.PI,
+      ),
+      new THREE.MeshToonMaterial({
+        color: lighter("#A4C8E1", 50),
+      }),
+    );
+    capsuleTop.position.y = -(length / 2);
+
+    const capsuleTopBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length / 2,
+        segment,
+        segment,
+        true,
+      ),
+
+      new THREE.MeshToonMaterial({
+        color: lighter("#A4C8E1", 50),
+      }),
+    );
+    capsuleTopBody.position.y = -((length / 4) * 2) + length / 4;
+
+    const capsuleBottom = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        radius,
+        segment,
+        360,
+        0,
+        Math.PI * 2,
+        Math.PI + Math.PI / 2,
+        Math.PI,
+      ),
+      new THREE.MeshToonMaterial({
+        color: lighter("#FF0000", 50),
+      }),
+    );
+    capsuleBottom.position.y = length / 2;
+    const capsuleBottonBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length / 2,
+        segment,
+        segment,
+        true,
+      ),
+
+      new THREE.MeshToonMaterial({
+        color: lighter("#FF0000", 50),
+      }),
+    );
+    capsuleBottonBody.position.y = (length / 4) * 2 - length / 4;
+
+    capsule.add(capsuleTop);
+    capsule.add(capsuleTopBody);
+    capsule.add(capsuleBottom);
+    capsule.add(capsuleBottonBody);
+
+    capsule.castShadow = true;
+    capsule.position.x =
+      object.geometry.parameters.radiusTop *
+      0.25 *
+      Math.cos(baseAngleInRadians);
+    capsule.position.y = object.geometry.parameters.height;
+    capsule.position.z =
+      object.geometry.parameters.radiusTop *
+      0.25 *
+      Math.sin(baseAngleInRadians);
+
+    capsule.rotateX(15);
+
+    capsule.scale.set(0.065, 0.065, 0.065);
+
+    object.add(capsule);
 
     /** NOTE: 등장 애니메이션 push */
     this.#animationMultiThread.push({
@@ -434,15 +640,12 @@ export class Cylinder {
         if (type === "cylinder-create" && this.#isCreated) {
           return false;
         }
-
         return !isKill;
       })
       .map((animationTask) => {
         const { type, duration, progress } = animationTask;
-
         const changeRate = 1 / duration / 1 / 60; // Rate of change per frame
         const nextprogress = Math.min(progress + changeRate, 1);
-
         /** NOTE: cylinder 만들때 애니메이션 로직 */
         if (type === "cylinder-create") {
           const height =
@@ -452,51 +655,41 @@ export class Cylinder {
           this.object.scale.set(1, easeOutCubic(nextprogress), 1);
           this.object.position.y = height;
         }
-
         /** NOTE: cylinder를 up 시키는 로직 */
         if (type === "cylinder-up") {
           const nextprogress = Math.min(progress + changeRate, 1);
           const scale = (1 + easeOutCubic(nextprogress)) / 1;
-
           this.object.scale.set(1, scale, 1);
           this.object.position.y = (this.height * scale) / 2;
         }
-
         /** NOTE: cylinder를 down 시키는 로직 */
         if (type === "cylinder-down") {
           const nextprogress = Math.max(progress - changeRate, 0);
           const scale = (1 + easeOutCubic(nextprogress)) / 1;
-
           this.object.scale.set(1, scale, 1);
           this.object.position.y = (this.height * scale) / 2;
           return { ...animationTask, progress: nextprogress };
         }
-
         /** NOTE: cylinder를 float 시키는 로직 */
         if (type === "cylinder-float-up") {
           const nextprogress = Math.min(progress + changeRate, 1);
           this.object.position.y =
             this.height / 2 + easeInCubic(nextprogress) / 2;
-
           this.object.material.color.set(
             darker(this.color, -30 * nextprogress),
           );
           return { ...animationTask, progress: nextprogress };
         }
-
         /** NOTE: cylinder를 float 시키는 로직 */
         if (type === "cylinder-float-down") {
           const nextprogress = Math.max(progress - changeRate, 0);
-
           this.object.position.y =
             this.height / 2 + easeInCubic(nextprogress) / 2;
           this.object.material.color.set(
             darker(this.color, -30 * nextprogress),
           );
-
           return { ...animationTask, progress: nextprogress };
         }
-
         return { ...animationTask, progress: nextprogress };
       })
       .filter((animationTask) => {
@@ -504,15 +697,12 @@ export class Cylinder {
         if (type === "cylinder-down" || type === "cylinder-float-down") {
           return progress > 0;
         }
-
         /** NOTE: cylinder가 다 만들어졌으면 this.#isCreated 상태 업데이트 */
         if (type === "cylinder-create" && progress >= 1) {
           this.#isCreated = true;
         }
-
         return progress < 1;
       });
-
     this.#animationMultiThread = newAnimationMultiThread;
   }
 }

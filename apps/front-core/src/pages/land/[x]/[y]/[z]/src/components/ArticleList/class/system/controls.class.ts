@@ -18,6 +18,7 @@ export class Controls {
 
     this.controls.screenSpacePanning = false;
 
+    this.controls.enableZoom = false;
     this.controls.minDistance = 15;
     this.controls.maxDistance = 75;
 
