@@ -14,17 +14,6 @@ import { prefetch } from "./prefetch";
 
 const router = createRouter<LandTypeXYZReq, ServerResponse>();
 
-router.get(
-  pipe<LandTypeXYZReq, LandTypeXYZPageProps>(
-    () => {
-      return { props: {} };
-    },
-    checkLand,
-    () => {
-      return { props: {} };
-    },
-    prefetch,
-  ),
-);
+router.get(pipe<LandTypeXYZReq, LandTypeXYZPageProps>(checkLand, prefetch));
 
 export const middleware = makeGetServerSideProps(router);

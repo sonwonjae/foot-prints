@@ -18,7 +18,7 @@ import {
   CylinderLocation,
 } from "./ArticleList.type";
 import { easeOutCubic, resize } from "./ArticleList.utils";
-import { Cylinder } from "./class/cylinder.class";
+import { Land } from "./class/land.class";
 import { System } from "./class/system/system.class";
 import { User } from "./class/user.class";
 
@@ -135,44 +135,24 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: cylinder list를 canvas에 그리는 메서드 */
   drawCylinderList() {
     this.#store.cylinderList.forEach((cylinderInfo) => {
-      const { location, category = null, type } = cylinderInfo;
+      const { location, category = null, landType, variation } = cylinderInfo;
       const { x, z } = location;
 
-      const finalCategory =
-        type === "mine-location"
-          ? "mine"
-          : type === "other-user-location"
-            ? "others"
-            : category;
-
-      /** NOTE: map의 x.z 좌표에 cylinder가 존재하지 않으면 추가 */
-      if (this.#store.map?.[x]?.[z]) {
-        return;
-      }
-      /** FIXME: auth 값 수정 필요 */
-      const auth =
-        type === "mine-location"
-          ? "mine"
-          : type === "other-user-location"
-            ? "others"
-            : "none";
-
-      const cylinder = new Cylinder({
+      const land = new Land({
         $canvas: this.$canvas,
         camera: this.#camera,
         scene: this.#scene,
         raycaster: this.#raycaster,
         pointer: this.#pointer,
 
-        auth,
+        landType,
+        variation,
+        /** FIXME: auth 설정 필요 */
+        auth: "none",
         location: { x, z },
-        category: finalCategory,
+        category,
       });
-      this.updateCylinderMap({ cylinder });
-
-      if (finalCategory) {
-        this.updateCategoryMap({ cylinder });
-      }
+      this.updateCylinderMap({ cylinder: land });
     });
   }
 
@@ -257,8 +237,8 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
           const { nx, nz } = locationToCameraPosition({ x, z });
 
-          const angleX = Math.PI * 3;
-          const angleZ = 6 * Math.PI;
+          const angleX = Math.PI ** 2;
+          const angleZ = 18;
 
           // /** NOTE: set camera & controls */
           this.#camera.position.set(
@@ -321,7 +301,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     }
   }
 
-  onCylinderEnter(event: CustomEvent<{ cylinder: Cylinder }>) {
+  onCylinderEnter(event: CustomEvent<{ cylinder: Land }>) {
     console.log(event);
     // const { cylinder } = event.detail;
     // const { categoryMap } = this.#store;
@@ -338,7 +318,7 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     // });
   }
 
-  onCylinderOut(event: CustomEvent<{ cylinder: Cylinder }>) {
+  onCylinderOut(event: CustomEvent<{ cylinder: Land }>) {
     console.log(event);
     // const { cylinder } = event.detail;
     // const { categoryMap } = this.#store;
@@ -413,7 +393,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     } else {
       animationMultiThread.push({
         type: "camera-move",
-        /** NOTE: user-move보다 커지면 안됨 */
         duration: 0.5,
         easingFuncionType: "easy-out",
         progress: 0,

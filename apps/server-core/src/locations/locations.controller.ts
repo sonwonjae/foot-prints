@@ -35,14 +35,13 @@ export class LocationsController {
   findLocationListPagination(
     @Param() param: GetLocationParamDto,
     @Query() query: GetLocationQueryDto,
-    @User() user: Tables<'users'>,
   ) {
-    return this.locationsService.findLocationListPagination(param, query, user);
+    return this.locationsService.findLocationListPagination(param, query);
   }
 
   @Get(':x/:z')
-  findOne(@Param() param: GetLocationParamDto, @User() user?: Tables<'users'>) {
-    return this.locationsService.findOne(param, user);
+  findOne(@Param() param: GetLocationParamDto) {
+    return this.locationsService.findOne(param);
   }
 
   @Patch(':id')

@@ -40,13 +40,13 @@ export interface MakeGetQueryOptions
     }
   > {}
 
-/** NOTE: location 정보 가져오는 쿼리 */
-export interface MakeGetQueryOptions
-  /** FIXME: back 로직이랑 타입 싱크 맞추기 */
-  extends Custom<
-    `/api/locations/${number}/${number}`,
-    { type: "empty" | "mine-location" | "other-user-location" }
-  > {}
+// /** NOTE: location 정보 가져오는 쿼리 */
+// export interface MakeGetQueryOptions
+//   /** FIXME: back 로직이랑 타입 싱크 맞추기 */
+//   extends Custom<
+//     `/api/locations/${number}/${number}`,
+//     { type: "empty" | "mine-location" | "other-user-location" }
+//   > {}
 
 /** NOTE: location list 정보 가져오는 쿼리 */
 export interface MakeGetQueryOptions

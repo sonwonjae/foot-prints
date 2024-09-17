@@ -12,7 +12,7 @@ const router = createRouter<CustomIncomingMessage, ServerResponse>().get(
   (): GetServerSidePropsResult<HomePageProps> => {
     return {
       redirect: {
-        destination: "/land/0/0/0",
+        destination: "/land/4/0/3",
         permanent: false,
       },
     };

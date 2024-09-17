@@ -35,31 +35,31 @@ function PioneerTool() {
   const sz = Number(router.query.sz);
   const isOpenMenu = MENU_VALUE_LIST[0] === openedMenu;
 
-  const userLocationQuery = makeGetQueryOptions({
-    url: `/api/locations/${ux}/${uz}`,
-  });
-  const { data: userLocationInfo, isLoading: isUserLocationInfoLoading } =
-    useQuery(
-      userLocationQuery.getQueryOptionsInClient({
-        queryOptions: {
-          enabled: isOpenMenu,
-        },
-      }),
-    );
+  // const userLocationQuery = makeGetQueryOptions({
+  //   url: `/api/locations/${ux}/${uz}`,
+  // });
+  // const { data: userLocationInfo, isLoading: isUserLocationInfoLoading } =
+  //   useQuery(
+  //     userLocationQuery.getQueryOptionsInClient({
+  //       queryOptions: {
+  //         enabled: isOpenMenu,
+  //       },
+  //     }),
+  //   );
 
-  const seletedLocationQuery = makeGetQueryOptions({
-    url: `/api/locations/${sx}/${sz}`,
-  });
-  const {
-    data: selectedLocationInfo,
-    isLoading: isSelectedLocationInfoLoading,
-  } = useQuery(
-    seletedLocationQuery.getQueryOptionsInClient({
-      queryOptions: {
-        enabled: isOpenMenu,
-      },
-    }),
-  );
+  // const seletedLocationQuery = makeGetQueryOptions({
+  //   url: `/api/locations/${sx}/${sz}`,
+  // });
+  // const {
+  //   data: selectedLocationInfo,
+  //   isLoading: isSelectedLocationInfoLoading,
+  // } = useQuery(
+  //   seletedLocationQuery.getQueryOptionsInClient({
+  //     queryOptions: {
+  //       enabled: isOpenMenu,
+  //     },
+  //   }),
+  // );
 
   const { mutateAsync: pioneerUnitByCameraLocation } = useMutation({
     mutationFn: async (targetLocation: CylinderLocation) => {
@@ -118,36 +118,40 @@ function PioneerTool() {
       <MenubarContent align="end" loop onEscapeKeyDown={toggle}>
         <MenubarItem
           disabled={
-            userLocationInfo?.type === "mine-location" ||
-            isUserLocationInfoLoading
+            false
+            // userLocationInfo?.type === "mine-location" ||
+            // isUserLocationInfoLoading
           }
           className={cn("cursor-pointer")}
           onClick={pioneer({ x: ux, z: uz })}
           onPointerEnter={floatUp({ x: ux, z: uz })}
           onPointerLeave={floatDown({ x: ux, z: uz })}
         >
-          {isUserLocationInfoLoading && (
+          {/* {isUserLocationInfoLoading && (
             <Skeleton className={cn("w-14", "h-5")} />
           )}
-          {!isUserLocationInfoLoading && <span>나의 위치</span>}
+          {!isUserLocationInfoLoading && <span>나의 위치</span>} */}
+          <span>나의 위치</span>
           <MenubarShortcut>
             <FootprintsIcon size={14} />
           </MenubarShortcut>
         </MenubarItem>
         <MenubarItem
           disabled={
-            selectedLocationInfo?.type === "mine-location" ||
-            isSelectedLocationInfoLoading
+            false
+            // selectedLocationInfo?.type === "mine-location" ||
+            // isSelectedLocationInfoLoading
           }
           className={cn("cursor-pointer")}
           onClick={pioneer({ x: sx, z: sz })}
           onPointerEnter={floatUp({ x: sx, z: sz })}
           onPointerLeave={floatDown({ x: sx, z: sz })}
         >
-          {isSelectedLocationInfoLoading && (
+          {/* {isSelectedLocationInfoLoading && (
             <Skeleton className={cn("w-14", "h-5")} />
           )}
-          {!isSelectedLocationInfoLoading && <span>선택한 위치</span>}
+          {!isSelectedLocationInfoLoading && <span>선택한 위치</span>} */}
+          <span>선택한 위치</span>
           <MenubarShortcut>
             <MousePointerClickIcon size={14} />
           </MenubarShortcut>

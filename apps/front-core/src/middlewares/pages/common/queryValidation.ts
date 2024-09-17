@@ -101,10 +101,17 @@ export const checkSingleQuery = <
                 [queryName]: defaultSingleQuery,
               };
             } else {
-              return {
-                isValid,
-                [queryName]: targetQuery,
-              };
+              if (!isValid) {
+                return {
+                  isValid,
+                  [queryName]: 0,
+                };
+              } else {
+                return {
+                  isValid,
+                  [queryName]: targetQuery,
+                };
+              }
             }
           }
         } else {

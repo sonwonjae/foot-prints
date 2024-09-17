@@ -8,7 +8,7 @@ export class Scene {
   scene: THREE.Scene;
   constructor({ camera }: { camera: THREE.PerspectiveCamera }) {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(lighter("#93EBF9", 80));
+    this.scene.background = new THREE.Color(lighter("#93EBF9", 98));
 
     camera.lookAt(this.scene.position);
 

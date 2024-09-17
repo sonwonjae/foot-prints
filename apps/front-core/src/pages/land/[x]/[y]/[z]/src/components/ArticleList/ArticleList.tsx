@@ -23,7 +23,7 @@ import { useUser } from "../../stores/user";
 
 import { CylinderMap } from "./ArticleList.class";
 import { CylinderLocation } from "./ArticleList.type";
-import { Cylinder } from "./class/cylinder.class";
+import { Land } from "./class/land.class";
 
 function ArticleList({
   ...props
@@ -90,7 +90,7 @@ function ArticleList({
 
   const onCylinderClick = ({
     detail: { cylinder },
-  }: CustomEvent<{ cylinder: Cylinder }>) => {
+  }: CustomEvent<{ cylinder: Land }>) => {
     const { location } = cylinder;
     const { x, z } = location;
 
@@ -131,21 +131,29 @@ function ArticleList({
       }
 
       const nextLocation = { x: nx, z: nz };
-      const isExistCylinder = !!articleMap.checkCylinder(nextLocation);
+      const landInfo = articleMap.checkCylinder(nextLocation);
+      const isExistLand = !!landInfo;
 
-      if (isExistCylinder) {
-        router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
-          shallow: true,
-        });
-
-        articleMap.moveCameraAnimation(nextLocation);
-
-        user?.move(nextLocation, "keyboard");
-      } else {
+      if (!isExistLand) {
         user?.vibrate();
         toast.error("이동할 땅이 없습니다!");
+        return;
       }
-    }, 550),
+      const { landType } = landInfo;
+      if (landType === "fence") {
+        user?.vibrate();
+        toast.error("울타리는 넘어갈 수 없습니다!");
+        return;
+      }
+
+      router.push(`/land/${nx}/0/${nz}${queryString}`, undefined, {
+        shallow: true,
+      });
+
+      articleMap.moveCameraAnimation(nextLocation);
+
+      user?.move(nextLocation, "keyboard");
+    }, 500),
     [articleMap],
   );
 
@@ -221,7 +229,7 @@ function ArticleList({
     articleMap.updateState({
       cylinderList: locationList,
     });
-    articleMap.drawCylinderList();
+    // articleMap.drawCylinderList();
     articleMap.addEvents();
 
     return () => {
@@ -295,7 +303,7 @@ function ArticleList({
                    * 이동할 땅이 없으면 어차피 모두 리셋해야되기 때문에
                    * router 사용하지 않고 깔끔하게 { x: 0, z: 0 } 좌표로 페이지 이동
                    */
-                  window.location.replace(`/land/${0}/0/${0}${queryString}`);
+                  window.location.replace(`/land/${4}/0/${3}${queryString}`);
                   return;
                 }
 

@@ -31,7 +31,7 @@ const checkLandLocationType: Middleware<Req> = async (req) => {
   if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
     return {
       redirect: {
-        destination: "/land/0/0/0",
+        destination: "/land/4/0/3",
         permanent: false,
       },
     };
@@ -58,30 +58,14 @@ const checkLandQuery = pipe<Req>(
   checkSingleQuery({
     queryName: "sx",
     validationType: "number",
-    defaultSingleQuery: (req) => {
-      return req.params?.x ?? 0;
-    },
+    defaultSingleQuery: 4,
   }),
   /** NOTE: 선택한 location z query */
   checkSingleQuery({
     queryName: "sz",
     validationType: "number",
-    defaultSingleQuery: (req) => {
-      return req.params?.z ?? 0;
-    },
+    defaultSingleQuery: 3,
   }),
 );
 
-export const checkLand = pipe<Req>(
-  () => {
-    return { props: {} };
-  },
-  checkLandLocationType,
-  () => {
-    return { props: {} };
-  },
-  checkLandQuery,
-  () => {
-    return { props: {} };
-  },
-);
+export const checkLand = pipe<Req>(checkLandLocationType, checkLandQuery);

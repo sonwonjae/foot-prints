@@ -1,20 +1,25 @@
 import type * as THREE from "three";
 
-import { Cylinder } from "./class/cylinder.class";
+import { Land } from "./class/land.class";
 
 /** NOTE: cylinder event type declare */
 declare global {
   interface GlobalEventHandlersEventMap {
-    "cylinder-click": CustomEvent<{ cylinder: Cylinder }>;
-    "cylinder-enter": CustomEvent<{ cylinder: Cylinder }>;
-    "cylinder-out": CustomEvent<{ cylinder: Cylinder }>;
+    "cylinder-click": CustomEvent<{ cylinder: Land }>;
+    "cylinder-enter": CustomEvent<{ cylinder: Land }>;
+    "cylinder-out": CustomEvent<{ cylinder: Land }>;
     "camera-move-end": CustomEvent<{ location: CylinderLocation }>;
   }
 }
 
 export type Cateogry = Nullable<string>;
 
-export type UnitType = "mine-location" | "other-user-location" | "empty";
+export type LandType =
+  | "time-capsule"
+  | "guest-book"
+  | "wasteland"
+  | "fence"
+  | "grass";
 
 export interface Article {
   location: {
@@ -23,20 +28,21 @@ export interface Article {
   };
   category?: Cateogry;
   height?: number /** FIXME: 이거 나중에 조회수로 바꿔야 함 */;
-  type: UnitType;
+  landType: LandType;
+  variation: number;
 }
 
 export interface ArticleMap {
   [key: number]: {
     [key: number]: {
-      cylinder: Cylinder;
+      cylinder: Land;
     };
   };
 }
 
 export interface CategoryMap {
   [category: string]: Array<{
-    cylinder: Cylinder;
+    cylinder: Land;
   }>;
 }
 
@@ -75,7 +81,8 @@ export interface DefaultCylinderType {
   location: { x: number; z: number };
   category?: Nullable<string>;
   height?: number;
-  type: UnitType;
+  landType: LandType;
+  variation: number;
 }
 
 export interface CylinderMapConstructorParam<CylinderType> {
@@ -86,9 +93,9 @@ export interface CylinderMapConstructorParam<CylinderType> {
 }
 
 export interface UpdateCylinderMapParam {
-  cylinder: Cylinder;
+  cylinder: Land;
 }
 
 export interface UpdateCategoryMapParam {
-  cylinder: Cylinder;
+  cylinder: Land;
 }

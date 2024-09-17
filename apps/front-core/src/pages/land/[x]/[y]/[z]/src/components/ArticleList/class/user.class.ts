@@ -7,6 +7,7 @@ import {
   ArticleMap,
   CylinderLocation,
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
+import { darker } from "@/three/utils/color";
 import { locationToCameraPosition } from "@/three/utils/location";
 
 import { userStore } from "../../../stores/user";
@@ -73,7 +74,7 @@ type AnimationTask =
   | UserMoveAnimationTask;
 
 /** NOTE: 떠있는 높이 height */
-const FLOAT_HEIGHT = 50;
+const FLOAT_HEIGHT = 10;
 
 export class User {
   /** NOTE: canvas element */
@@ -150,7 +151,7 @@ export class User {
     // 몸체
     const objectGeometry = new THREE.SphereGeometry(this.#bodySize, 32, 32);
     const objectMaterial = new THREE.MeshToonMaterial({
-      color: "#F5F5FF",
+      color: darker("#FFFFFF", -10),
     });
     const object = new THREE.Mesh(objectGeometry, objectMaterial);
     object.animations;
@@ -201,8 +202,9 @@ export class User {
       this.isCreated = true;
     } else {
       const lx = bx;
-      const ly = by + this.#bodySize + this.#floatHeight;
+      const ly = FLOAT_HEIGHT;
       const lz = bz;
+      this.object.scale.set(1, 1, 1);
       this.object.position.set(lx, ly, lz);
 
       /** NOTE: 안착할 cylinder가 없으면 controls 사용 불가 */
@@ -273,8 +275,7 @@ export class User {
         ? lastMoveAnimationTask.nextLocation
         : this.location,
       nextLocation,
-      /** NOTE: camera-move보다 작아지면 안됨 */
-      duration: 0.55,
+      duration: 0.5,
       progress: 0,
     });
   }
@@ -318,6 +319,7 @@ export class User {
         if (type === "user-fall") {
           this.object.position.y =
             FLOAT_HEIGHT - FLOAT_HEIGHT * easeInCubic(nextprogress) * 3;
+
           return { ...animationTask, progress: nextprogress };
         }
 

@@ -2,8 +2,10 @@ import type {
   Cateogry,
   CylinderObject,
   CylinderLocation,
+  LandType,
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
+import { random } from "es-toolkit";
 import * as THREE from "three";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -25,6 +27,8 @@ interface CylinderConstructorParam {
   raycaster: THREE.Raycaster;
   pointer: THREE.Vector2;
 
+  landType: LandType;
+  variation: number;
   auth: "mine" | "others" | "none";
   location: CylinderLocation;
   category: Cateogry;
@@ -62,7 +66,8 @@ type AnimationTask =
       isKill?: boolean;
     };
 
-export class Cylinder {
+/** FIXME: land로 이름 변경한거 전체 다 적용하기 */
+export class Land {
   /** NOTE: canvas element */
   $canvas: HTMLCanvasElement;
 
@@ -88,6 +93,9 @@ export class Cylinder {
 
   #animationMultiThread: Array<AnimationTask> = [];
 
+  landType: LandType;
+  variation: number = 0;
+
   object: CylinderObject;
   height: number;
   color: `#${string}`;
@@ -102,6 +110,8 @@ export class Cylinder {
     raycaster,
     pointer,
 
+    landType,
+    variation,
     auth,
     location,
     category,
@@ -111,6 +121,8 @@ export class Cylinder {
     this.#scene = scene;
     this.#raycaster = raycaster;
     this.#pointer = pointer;
+    this.landType = landType;
+    this.variation = variation;
     this.auth = auth;
     this.category = category;
     this.location = location;
@@ -128,8 +140,17 @@ export class Cylinder {
     this.startDownAnimation = this.startDownAnimation.bind(this);
     this.animate = this.animate.bind(this);
 
-    this.height = 0.3;
-    this.color = lighter("#96BF00", 50);
+    this.height = 0.6;
+    this.color = (() => {
+      switch (this.landType) {
+        case "time-capsule":
+        case "grass":
+          return lighter("#A5B78F", 50);
+        case "wasteland":
+        default:
+          return lighter("#CFB9A2", 50);
+      }
+    })();
 
     /** NOTE: create cylinder object */
     const geometry = new THREE.CylinderGeometry(
@@ -157,224 +178,392 @@ export class Cylinder {
     this.#scene.add(object);
     this.object = object;
 
-    /** FIXME: 구조물 테스트임 */
     const gltfLoader = new GLTFLoader();
-
-    /** NOTE: tree */
-    gltfLoader.load(
-      "/tree/base.glb",
-      async (gltf) => {
-        // 각도를 라디안으로 변환
-        const angleInRadians = -60 * (Math.PI / 180);
-
-        gltf.scene.castShadow = true;
-        gltf.scene.position.x =
-          object.geometry.parameters.radiusTop * 0.5 * Math.cos(angleInRadians);
-        gltf.scene.position.y = object.geometry.parameters.height;
-        gltf.scene.position.z =
-          object.geometry.parameters.radiusTop * 0.5 * Math.sin(angleInRadians);
-
-        const children =
-          (gltf.scene.children[0]?.children as Array<THREE.Mesh>) || [];
-
-        const treeTrunk = children[0];
-        const leaveBunch1 = children[1];
-        const leaveBunch2 = children[2];
-
-        if (treeTrunk?.material) {
-          treeTrunk.material = new THREE.MeshToonMaterial({
-            color: lighter("#8B4513"),
-          });
-        }
-
-        if (leaveBunch1?.material) {
-          leaveBunch1.material = new THREE.MeshToonMaterial({
-            color: lighter("#96BF00", 30),
-          });
-        }
-
-        if (leaveBunch2?.material) {
-          leaveBunch2.material = new THREE.MeshToonMaterial({
-            color: lighter("#96BF00", 30),
-          });
-        }
-
-        gltf.scene.position.y = object.geometry.parameters.height;
-        gltf.scene.scale.set(0.25, 0.25, 0.25);
-        object.add(gltf.scene);
-      },
-      undefined,
-      (error) => {
-        console.error(error);
-      },
-    );
-    const baseAngleInRadians = -60 * (Math.PI / 180);
-
     const fbxLoader = new FBXLoader();
 
-    /** NOTE: flat한 rock */
-    fbxLoader.load("/rock/flat_1.fbx", (fbx) => {
-      // 각도를 라디안으로 변환
+    if (this.landType === "fence") {
+      const fenceNumber = this.variation;
 
-      const flatRock = fbx.children[0] as THREE.Mesh | undefined;
+      fbxLoader.load("/fence/1.fbx", (fbx) => {
+        const originFence = fbx.children[0] as THREE.Mesh | undefined;
 
-      if (!flatRock) {
-        return;
-      }
+        if (!originFence) {
+          return;
+        }
+        const DEGREE_ARRAY = [
+          [
+            {
+              degree: 0,
+              angle: 0,
+              adjustment: {
+                x: 0,
+                z: 0,
+              },
+            },
+            {
+              degree: 180,
+              angle: 0,
+              adjustment: {
+                x: 0,
+                z: 0,
+              },
+            },
+          ],
+          [
+            {
+              degree: 0,
+              angle: 30,
+              adjustment: {
+                x: -0.75 * Math.cos(360),
+                z: -0.75 * Math.sin(360),
+              },
+            },
+            {
+              degree: 180,
+              angle: 330,
+              adjustment: {
+                x: -0.75 * Math.cos(360),
+                z: -0.75 * Math.sin(360),
+              },
+            },
+          ],
+        ];
 
-      flatRock.castShadow = true;
-      flatRock.position.x =
-        object.geometry.parameters.radiusTop *
-        0.25 *
-        Math.cos(baseAngleInRadians);
-      flatRock.position.y = object.geometry.parameters.height - 0.125;
-      flatRock.position.z =
-        object.geometry.parameters.radiusTop *
-        0.25 *
-        Math.sin(baseAngleInRadians);
+        const GROUP_ROTATION_ARRAY = [
+          0, 330, 300, 270, 240, 210, 180, 150, 120, 90, 60, 30,
+        ];
 
-      flatRock.scale.set(0.0025, 0.0025, 0.0025);
+        const fenceGroup = new THREE.Group();
 
-      flatRock.material = new THREE.MeshToonMaterial({
-        color: lighter("#8B4513", 99),
+        for (const { degree, angle, adjustment } of DEGREE_ARRAY[
+          fenceNumber % 2
+        ]!) {
+          const fence = originFence.clone();
+          fence.material = new THREE.MeshToonMaterial({
+            color: darker("#CFB9A2", -20),
+          });
+          const angleInRadians = degree * (Math.PI / 180);
+          fence.castShadow = true;
+          fence.position.x =
+            object.geometry.parameters.radiusTop *
+            0.35 *
+            Math.cos(angleInRadians);
+          fence.position.y = object.geometry.parameters.height;
+          fence.position.z =
+            object.geometry.parameters.radiusTop *
+            0.35 *
+            Math.sin(angleInRadians);
+          fence.scale.set(0.005, 0.005, 0.005);
+
+          fence.position.x = fence.position.x + adjustment.x;
+          fence.position.z = fence.position.z + adjustment.z;
+          fence.rotation.set(0, Math.PI * 2 * (angle / 360), 0);
+          fenceGroup.add(fence);
+        }
+        fenceGroup.rotation.set(
+          0,
+          Math.PI * 2 * (GROUP_ROTATION_ARRAY[fenceNumber]! / 360),
+          0,
+        );
+        object.add(fenceGroup);
       });
+    }
 
-      object.add(flatRock);
-    });
+    if (this.landType === "grass") {
+      /** NOTE: 수풀 */
+      for (let variation = 1; variation <= 7; variation += 1) {
+        fbxLoader.load(`/grass/${variation}.fbx`, (fbx) => {
+          const originGrass = fbx.children[0] as THREE.Mesh | undefined;
 
-    fbxLoader.load("/rock/small_1.fbx", (fbx) => {
-      // 각도를 라디안으로 변환
+          if (!originGrass) {
+            return;
+          }
+          originGrass.material = new THREE.MeshToonMaterial({
+            color: lighter("#A5B78F", 30),
+          });
 
-      const smallRock = fbx.children[0] as THREE.Mesh | undefined;
+          const ARRAY = Array.from(
+            { length: Math.round(random(5, 10)) },
+            () => {
+              return {
+                radian: random(120, 420) * (Math.PI / 180),
+                radius: random(0.2, 0.75),
+              };
+            },
+          );
 
-      if (!smallRock) {
-        return;
+          for (const { radian, radius } of ARRAY) {
+            const grass = originGrass.clone();
+            grass.position.x =
+              object.geometry.parameters.radiusTop * radius * Math.cos(radian);
+            grass.position.y = object.geometry.parameters.height - 0.15;
+            grass.position.z =
+              object.geometry.parameters.radiusTop * radius * Math.sin(radian);
+            grass.scale.set(0.75, 0.75, 0.75);
+
+            object.add(grass);
+          }
+        });
       }
+    }
+    if (this.landType === "guest-book") {
+      fbxLoader.load("/sign/1.fbx", (fbx) => {
+        const sign = fbx.children[0] as THREE.Mesh | undefined;
 
-      const count = 6;
-      for (let i = 1; i <= count; i += 1) {
-        const clonedSmallRock = smallRock.clone();
-
-        const angleInRadians = i * (360 / count) * (Math.PI / 180);
-        const bx =
-          object.geometry.parameters.radiusTop *
-          0.25 *
-          Math.cos(baseAngleInRadians);
-        const bz =
-          object.geometry.parameters.radiusTop *
-          0.25 *
-          Math.sin(baseAngleInRadians);
-
-        const radius = 0.4;
-
-        const fx = bx + radius * Math.cos(angleInRadians);
-        const fz = bz + radius * Math.sin(angleInRadians);
-
-        clonedSmallRock.castShadow = true;
-        clonedSmallRock.position.x = fx;
-        clonedSmallRock.position.y = object.geometry.parameters.height;
-        clonedSmallRock.position.z = fz;
-
-        clonedSmallRock.scale.set(0.0025, 0.0025, 0.0025);
-
-        clonedSmallRock.material = new THREE.MeshToonMaterial({
-          color: lighter("#8B4513", 90),
+        if (!sign) {
+          return;
+        }
+        sign.material = new THREE.MeshToonMaterial({
+          color: darker("#CFB9A2", -20),
         });
 
-        object.add(clonedSmallRock);
+        const angleInRadians = -60 * (Math.PI / 180);
+
+        sign.castShadow = true;
+        sign.position.x =
+          object.geometry.parameters.radiusTop * 0.5 * Math.cos(angleInRadians);
+        sign.position.y = object.geometry.parameters.height + 2.2;
+        sign.position.z =
+          object.geometry.parameters.radiusTop * 0.5 * Math.sin(angleInRadians);
+        sign.scale.set(0.006, 0.006, 0.006);
+
+        object.add(sign);
+      });
+    }
+
+    if (this.landType === "time-capsule") {
+      /** NOTE: 수풀 */
+      for (let variation = 1; variation <= 7; variation += 1) {
+        fbxLoader.load(`/grass/${variation}.fbx`, (fbx) => {
+          const originGrass = fbx.children[0] as THREE.Mesh | undefined;
+
+          if (!originGrass) {
+            return;
+          }
+          originGrass.material = new THREE.MeshToonMaterial({
+            color: lighter("#A5B78F", 30),
+          });
+
+          const ARRAY = Array.from({ length: Math.round(random(3, 7)) }, () => {
+            return {
+              radian: random(120, 420) * (Math.PI / 180),
+              radius: random(0.4, 0.75),
+            };
+          }).filter(({ radian }) => {
+            const min = 240;
+            const max = 330;
+            return !(
+              min < radian / (Math.PI / 180) && radian / (Math.PI / 180) < max
+            );
+          });
+
+          for (const { radian, radius } of ARRAY) {
+            const grass = originGrass.clone();
+            grass.position.x =
+              object.geometry.parameters.radiusTop * radius * Math.cos(radian);
+            grass.position.y = object.geometry.parameters.height - 0.15;
+            grass.position.z =
+              object.geometry.parameters.radiusTop * radius * Math.sin(radian);
+            grass.scale.set(0.75, 0.75, 0.75);
+
+            object.add(grass);
+          }
+        });
       }
-    });
 
-    /** NOTE: capsule */
-    const radius = 3;
-    const length = 8;
-    const segment = 6;
-    const capsule = new THREE.Group();
+      /** NOTE: tree */
+      gltfLoader.load(
+        "/tree/base.glb",
+        async (gltf) => {
+          const tree = gltf.scene;
+          // 각도를 라디안으로 변환
+          const angleInRadians = -60 * (Math.PI / 180);
 
-    const capsuleTop = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        radius,
-        segment,
-        360,
-        0,
-        Math.PI * 2,
-        Math.PI / 2,
-        Math.PI,
-      ),
-      new THREE.MeshToonMaterial({
-        color: lighter("#A4C8E1", 50),
-      }),
-    );
-    capsuleTop.position.y = -(length / 2);
+          tree.castShadow = true;
+          tree.position.x =
+            object.geometry.parameters.radiusTop *
+            0.5 *
+            Math.cos(angleInRadians);
+          tree.position.y = object.geometry.parameters.height;
+          tree.position.z =
+            object.geometry.parameters.radiusTop *
+            0.5 *
+            Math.sin(angleInRadians);
 
-    const capsuleTopBody = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        radius,
-        radius,
-        length / 2,
-        segment,
-        segment,
-        true,
-      ),
+          const children =
+            (tree.children[0]?.children as Array<THREE.Mesh>) || [];
 
-      new THREE.MeshToonMaterial({
-        color: lighter("#A4C8E1", 50),
-      }),
-    );
-    capsuleTopBody.position.y = -((length / 4) * 2) + length / 4;
+          const treeTrunk = children[0];
+          const leaveBunch1 = children[1];
+          const leaveBunch2 = children[2];
 
-    const capsuleBottom = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        radius,
-        segment,
-        360,
-        0,
-        Math.PI * 2,
-        Math.PI + Math.PI / 2,
-        Math.PI,
-      ),
-      new THREE.MeshToonMaterial({
-        color: lighter("#FF0000", 50),
-      }),
-    );
-    capsuleBottom.position.y = length / 2;
-    const capsuleBottonBody = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        radius,
-        radius,
-        length / 2,
-        segment,
-        segment,
-        true,
-      ),
+          if (treeTrunk?.material) {
+            treeTrunk.material = new THREE.MeshToonMaterial({
+              color: darker("#CFB9A2", -20),
+            });
+          }
 
-      new THREE.MeshToonMaterial({
-        color: lighter("#FF0000", 50),
-      }),
-    );
-    capsuleBottonBody.position.y = (length / 4) * 2 - length / 4;
+          if (leaveBunch1?.material) {
+            leaveBunch1.material = new THREE.MeshToonMaterial({
+              color: lighter("#A5B78F", 30),
+            });
+          }
 
-    capsule.add(capsuleTop);
-    capsule.add(capsuleTopBody);
-    capsule.add(capsuleBottom);
-    capsule.add(capsuleBottonBody);
+          if (leaveBunch2?.material) {
+            leaveBunch2.material = new THREE.MeshToonMaterial({
+              color: lighter("#A5B78F", 30),
+            });
+          }
 
-    capsule.castShadow = true;
-    capsule.position.x =
-      object.geometry.parameters.radiusTop *
-      0.25 *
-      Math.cos(baseAngleInRadians);
-    capsule.position.y = object.geometry.parameters.height;
-    capsule.position.z =
-      object.geometry.parameters.radiusTop *
-      0.25 *
-      Math.sin(baseAngleInRadians);
+          tree.position.y = object.geometry.parameters.height;
+          tree.scale.set(0.55, 0.55, 0.55);
+          object.add(tree);
+        },
+        undefined,
+        (error) => {
+          console.error(error);
+        },
+      );
+      const baseAngleInRadians = -60 * (Math.PI / 180);
 
-    capsule.rotateX(15);
+      fbxLoader.load("/rock/small_1.fbx", (fbx) => {
+        // 각도를 라디안으로 변환
 
-    capsule.scale.set(0.065, 0.065, 0.065);
+        const smallRock = fbx.children[0] as THREE.Mesh | undefined;
 
-    object.add(capsule);
+        if (!smallRock) {
+          return;
+        }
+
+        const count = 6;
+        for (let i = 1; i <= count; i += 1) {
+          const clonedSmallRock = smallRock.clone();
+
+          const angleInRadians = i * (360 / count) * (Math.PI / 180);
+          const bx =
+            object.geometry.parameters.radiusTop *
+            0.15 *
+            Math.cos(baseAngleInRadians);
+          const bz =
+            object.geometry.parameters.radiusTop *
+            0.15 *
+            Math.sin(baseAngleInRadians);
+
+          const radius = 0.6;
+
+          const fx = bx + radius * Math.cos(angleInRadians);
+          const fz = bz + radius * Math.sin(angleInRadians);
+
+          clonedSmallRock.castShadow = true;
+          clonedSmallRock.position.x = fx;
+          clonedSmallRock.position.y = object.geometry.parameters.height - 0.15;
+          clonedSmallRock.position.z = fz;
+
+          clonedSmallRock.scale.set(0.004, 0.004, 0.004);
+
+          clonedSmallRock.material = new THREE.MeshToonMaterial({
+            color: lighter("#CFB9A2", 10),
+          });
+
+          object.add(clonedSmallRock);
+        }
+      });
+
+      /** NOTE: capsule */
+      const radius = 3;
+      const length = 8;
+      const segment = 8;
+      const capsule = new THREE.Group();
+
+      const capsuleTop = new THREE.Mesh(
+        new THREE.SphereGeometry(
+          radius,
+          segment,
+          segment,
+          Math.PI,
+          Math.PI * 2,
+          0,
+          Math.PI * 2,
+        ),
+        new THREE.MeshToonMaterial({
+          color: lighter("#A4C8E1", 60),
+        }),
+      );
+      capsuleTop.position.y = -(length / 2);
+
+      const capsuleTopBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length / 2,
+          segment,
+          segment,
+          false,
+          0,
+          Math.PI * 2,
+        ),
+
+        new THREE.MeshToonMaterial({
+          color: lighter("#A4C8E1", 60),
+        }),
+      );
+      capsuleTopBody.position.y = -((length / 4) * 2) + length / 4;
+
+      const capsuleBottom = new THREE.Mesh(
+        new THREE.SphereGeometry(
+          radius,
+          segment,
+          segment,
+          Math.PI,
+          Math.PI * 2,
+          0,
+          Math.PI * 2,
+        ),
+        new THREE.MeshToonMaterial({
+          color: lighter("#4EACC1", 60),
+        }),
+      );
+      capsuleBottom.position.y = length / 2;
+      const capsuleBottonBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length / 2,
+          segment,
+          segment,
+          false,
+          0,
+          Math.PI * 2,
+        ),
+
+        new THREE.MeshToonMaterial({
+          color: lighter("#4EACC1", 50),
+        }),
+      );
+      capsuleBottonBody.position.y = (length / 4) * 2 - length / 4;
+
+      capsule.add(capsuleTop);
+      capsule.add(capsuleTopBody);
+      capsule.add(capsuleBottom);
+      capsule.add(capsuleBottonBody);
+
+      capsule.castShadow = true;
+      capsule.position.x =
+        object.geometry.parameters.radiusTop *
+        0.15 *
+        Math.cos(baseAngleInRadians);
+      capsule.position.y = object.geometry.parameters.height;
+      capsule.position.z =
+        object.geometry.parameters.radiusTop *
+        0.15 *
+        Math.sin(baseAngleInRadians);
+
+      capsule.rotateX(15);
+
+      capsule.scale.set(0.1, 0.1, 0.1);
+
+      object.add(capsule);
+    }
 
     /** NOTE: 등장 애니메이션 push */
     this.#animationMultiThread.push({
@@ -400,7 +589,7 @@ export class Cylinder {
       return;
     }
 
-    const cylinderOutEvent = new CustomEvent<{ cylinder: Cylinder }>(
+    const cylinderOutEvent = new CustomEvent<{ cylinder: Land }>(
       "cylinder-click",
       {
         detail: { cylinder: this },
@@ -434,7 +623,7 @@ export class Cylinder {
       }
 
       if (this.#enterState === "enter") {
-        const cylinderOutEvent = new CustomEvent<{ cylinder: Cylinder }>(
+        const cylinderOutEvent = new CustomEvent<{ cylinder: Land }>(
           "cylinder-out",
           {
             detail: { cylinder: this },
@@ -451,7 +640,7 @@ export class Cylinder {
       return;
     }
     if (this.#enterState === "out" || this.#enterState === null) {
-      const cylinderEnterEvent = new CustomEvent<{ cylinder: Cylinder }>(
+      const cylinderEnterEvent = new CustomEvent<{ cylinder: Land }>(
         "cylinder-enter",
         {
           detail: { cylinder: this },
@@ -524,7 +713,7 @@ export class Cylinder {
     });
   }
 
-  onCylinderEnter(event: CustomEvent<{ cylinder: Cylinder }>) {
+  onCylinderEnter(event: CustomEvent<{ cylinder: Land }>) {
     const { cylinder } = event.detail;
     if (
       cylinder.location.x !== this.location.x ||
@@ -535,7 +724,7 @@ export class Cylinder {
     this.floatUp();
   }
 
-  onCylinderOut(event: CustomEvent<{ cylinder: Cylinder }>) {
+  onCylinderOut(event: CustomEvent<{ cylinder: Land }>) {
     const { cylinder } = event.detail;
     if (
       cylinder.location.x !== this.location.x ||

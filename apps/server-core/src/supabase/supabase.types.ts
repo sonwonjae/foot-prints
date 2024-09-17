@@ -44,98 +44,92 @@ export type Database = {
           },
         ];
       };
-      foot_prints: {
+      locations: {
+        Row: {
+          createdAt: string;
+          id: string;
+          landType: Database['public']['Enums']['landType'] | null;
+          updatedAt: string;
+          variation: number;
+          x: number;
+          z: number;
+        };
+        Insert: {
+          createdAt?: string;
+          id?: string;
+          landType?: Database['public']['Enums']['landType'] | null;
+          updatedAt?: string;
+          variation?: number;
+          x: number;
+          z: number;
+        };
+        Update: {
+          createdAt?: string;
+          id?: string;
+          landType?: Database['public']['Enums']['landType'] | null;
+          updatedAt?: string;
+          variation?: number;
+          x?: number;
+          z?: number;
+        };
+        Relationships: [];
+      };
+      notes: {
         Row: {
           content: string;
           createdAt: string;
-          description: string;
           id: string;
-          isPublic: boolean;
-          title: string;
           updatedAt: string;
         };
         Insert: {
           content?: string;
           createdAt?: string;
-          description?: string;
           id?: string;
-          isPublic?: boolean;
-          title?: string;
           updatedAt?: string;
         };
         Update: {
           content?: string;
           createdAt?: string;
-          description?: string;
           id?: string;
-          isPublic?: boolean;
-          title?: string;
           updatedAt?: string;
         };
         Relationships: [];
       };
-      foot_prints__locations: {
+      notes__locations: {
         Row: {
           createdAt: string;
-          footPrintId: string;
           id: string;
           locationId: string;
-          updatedAt: string;
+          noteId: string;
         };
         Insert: {
           createdAt?: string;
-          footPrintId: string;
           id?: string;
           locationId: string;
-          updatedAt?: string;
+          noteId: string;
         };
         Update: {
           createdAt?: string;
-          footPrintId?: string;
           id?: string;
           locationId?: string;
-          updatedAt?: string;
+          noteId?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'foot_prints__locations_footPrintId_fkey';
-            columns: ['footPrintId'];
-            isOneToOne: false;
-            referencedRelation: 'foot_prints';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'foot_prints__locations_locationId_fkey';
+            foreignKeyName: 'notes__locations_locationId_fkey';
             columns: ['locationId'];
             isOneToOne: false;
             referencedRelation: 'locations';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'notes__locations_noteId_fkey';
+            columns: ['noteId'];
+            isOneToOne: false;
+            referencedRelation: 'notes';
+            referencedColumns: ['id'];
+          },
         ];
-      };
-      locations: {
-        Row: {
-          createdAt: string;
-          id: string;
-          updatedAt: string;
-          x: number;
-          z: number;
-        };
-        Insert: {
-          createdAt?: string;
-          id?: string;
-          updatedAt?: string;
-          x: number;
-          z: number;
-        };
-        Update: {
-          createdAt?: string;
-          id?: string;
-          updatedAt?: string;
-          x?: number;
-          z?: number;
-        };
-        Relationships: [];
       };
       users: {
         Row: {
@@ -170,77 +164,35 @@ export type Database = {
         };
         Relationships: [];
       };
-      users__foot_prints: {
+      users__notes: {
         Row: {
-          createdAt: string;
-          footPrintId: string;
-          id: string;
-          updatedAt: string;
+          created_at: string;
+          id: number;
+          noteId: string;
           userId: string;
         };
         Insert: {
-          createdAt?: string;
-          footPrintId: string;
-          id?: string;
-          updatedAt?: string;
-          userId: string;
+          created_at?: string;
+          id?: number;
+          noteId?: string;
+          userId?: string;
         };
         Update: {
-          createdAt?: string;
-          footPrintId?: string;
-          id?: string;
-          updatedAt?: string;
+          created_at?: string;
+          id?: number;
+          noteId?: string;
           userId?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'users__foot_prints_footPrintId_fkey';
-            columns: ['footPrintId'];
+            foreignKeyName: 'users_notes_noteId_fkey';
+            columns: ['noteId'];
             isOneToOne: false;
-            referencedRelation: 'foot_prints';
+            referencedRelation: 'notes';
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'users__foot_prints_userId_fkey';
-            columns: ['userId'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      users__locations: {
-        Row: {
-          createdAt: string;
-          id: string;
-          locationId: string;
-          updateAt: string;
-          userId: string;
-        };
-        Insert: {
-          createdAt?: string;
-          id?: string;
-          locationId: string;
-          updateAt?: string;
-          userId: string;
-        };
-        Update: {
-          createdAt?: string;
-          id?: string;
-          locationId?: string;
-          updateAt?: string;
-          userId?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'users__locations_locationId_fkey';
-            columns: ['locationId'];
-            isOneToOne: false;
-            referencedRelation: 'locations';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'users__locations_userId_fkey';
+            foreignKeyName: 'users_notes_userId_fkey';
             columns: ['userId'];
             isOneToOne: false;
             referencedRelation: 'users';
@@ -256,6 +208,22 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      landType:
+        | 'time-capsule'
+        | 'guest-book'
+        | 'wasteland'
+        | 'fence'
+        | 'grass'
+        | 'mistake.9'
+        | 'mistake.8'
+        | 'mistake.7'
+        | 'mistake.6'
+        | 'mistake.5'
+        | 'mistake.4'
+        | 'mistake.3'
+        | 'mistake.2'
+        | 'mistake.1'
+        | 'mistake.0';
       provider: 'github';
     };
     CompositeTypes: {

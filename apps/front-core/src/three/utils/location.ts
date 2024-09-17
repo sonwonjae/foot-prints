@@ -26,8 +26,8 @@ export const cameraPositionToLocation = ({
   z,
   magnification = DEFAULT_MAGNIFICATION,
 }: LocationFunctionParam) => {
-  const angleX = Math.PI * 3;
-  const angleZ = 6 * Math.PI;
+  const angleX = Math.PI ** 2;
+  const angleZ = 18;
 
   const nz = Math.round((z - angleZ) / magnification / Math.sqrt(Math.PI));
   const nx = Math.round((x - angleX) / magnification / 2 + (nz % 2) / 2);

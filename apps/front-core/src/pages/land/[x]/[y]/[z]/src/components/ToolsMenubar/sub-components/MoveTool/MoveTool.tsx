@@ -51,14 +51,21 @@ function MoveTool() {
         return;
       }
 
-      const isExistCylinder = !!articleMap.checkCylinder(targetLocation);
+      const landInfo = articleMap.checkCylinder(targetLocation);
+      const isExistLand = !!landInfo;
 
-      if (!isExistCylinder) {
+      if (!isExistLand) {
         user.vibrate();
         return;
       }
+      const { landType } = landInfo;
 
-      if (isExistCylinder) {
+      if (landType === "fence") {
+        user?.vibrate();
+        return;
+      }
+
+      if (isExistLand) {
         router.push(
           `/land/${targetLocation.x}/0/${targetLocation.z}${queryString}`,
           undefined,
