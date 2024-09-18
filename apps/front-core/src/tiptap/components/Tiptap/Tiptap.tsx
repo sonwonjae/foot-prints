@@ -1,3 +1,4 @@
+import CharacterCount from "@tiptap/extension-character-count";
 import Document from "@tiptap/extension-document";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import Gapcursor from "@tiptap/extension-gapcursor";
@@ -19,9 +20,10 @@ import { cn } from "@/utils/tailwindcss";
 interface TiptapProps {
   value: string;
   onChange: (params: { html: string }) => void;
-  className: string;
+  className?: string;
   placeholder: string;
   editable?: boolean;
+  maxLength?: number;
 }
 
 function Tiptap({
@@ -30,10 +32,14 @@ function Tiptap({
   className = "",
   placeholder = "",
   editable = false,
+  maxLength,
 }: TiptapProps) {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      CharacterCount.configure({
+        limit: maxLength,
+      }),
       Document,
       Dropcursor,
       Gapcursor,
@@ -69,7 +75,11 @@ function Tiptap({
 
   return (
     <>
-      <EditorContent editor={editor} className={cn("w-full", className)} />
+      <EditorContent
+        editor={editor}
+        className={cn("w-full", className)}
+        tabIndex={0}
+      />
       {/* {editor && (
           <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
             <div className="bubble-menu">

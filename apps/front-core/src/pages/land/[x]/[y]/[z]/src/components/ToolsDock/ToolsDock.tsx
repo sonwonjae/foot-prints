@@ -1,4 +1,3 @@
-import { Dock } from "@/shad-cn/components/magicui/dock";
 import { cn } from "@/utils/tailwindcss";
 
 import { useArticleMap } from "../../stores/articleMap";
@@ -27,16 +26,13 @@ function ToolsDockComponent() {
   }
 
   return (
-    <Dock
-      direction="middle"
-      className={cn("absolute", "bottom-4", "left-0", "right-0", "bg-white")}
-    >
+    <div className={cn("absolute", "bottom-4", "left-0", "right-0")}>
       <TimeCapsuleTool />
       <GuestBookTool />
       <WastelandTool />
       <FenceTool />
       <GrassTool />
-    </Dock>
+    </div>
   );
 }
 

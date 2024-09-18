@@ -1,3 +1,5 @@
+import { round } from "es-toolkit";
+
 import { CylinderLocation } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
 interface LocationFunctionParam extends CylinderLocation {
@@ -29,8 +31,8 @@ export const cameraPositionToLocation = ({
   const angleX = Math.PI ** 2;
   const angleZ = 18;
 
-  const nz = Math.round((z - angleZ) / magnification / Math.sqrt(Math.PI));
-  const nx = Math.round((x - angleX) / magnification / 2 + (nz % 2) / 2);
+  const nz = round((z - angleZ) / magnification / Math.sqrt(Math.PI));
+  const nx = round((x - angleX) / magnification / 2 + (nz % 2) / 2);
   return {
     nx,
     nz,

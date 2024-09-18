@@ -10,6 +10,7 @@ import {
 import { darker } from "@/three/utils/color";
 import { locationToCameraPosition } from "@/three/utils/location";
 
+import { selectedLandStore } from "../../../stores/selectedLand";
 import { userStore } from "../../../stores/user";
 import { easeInCubic, easeOutCubic } from "../ArticleList.utils";
 
@@ -200,6 +201,15 @@ export class User {
         progress: 0,
       });
       this.isCreated = true;
+
+      /** NOTE: 안착할 cylinder가 있으면 landType 업데이트 */
+      selectedLandStore.updateUserLocation({
+        landType: cylinder.landType,
+        location: {
+          x,
+          z,
+        },
+      });
     } else {
       const lx = bx;
       const ly = FLOAT_HEIGHT;
@@ -508,6 +518,17 @@ export class User {
           /** FIXME: location 업데이트하는 로직 이렇게 써도 될지 고민 좀 더 해봐야됨 */
           // this.location = nextLocation;
           userStore.changeUserLocation(nextLocation);
+
+          /** NOTE: user location 이동 시 user location 변경 */
+          const cylinder =
+            this.#map[nextLocation.x]?.[nextLocation.z]?.cylinder;
+          if (cylinder) {
+            selectedLandStore.updateUserLocation({
+              landType: cylinder.landType,
+              location: nextLocation,
+            });
+          }
+
           this.isMoving = !!animationMultiThread.find(
             (innerAnimationTask, innerIndex) => {
               if (innerIndex <= index) {

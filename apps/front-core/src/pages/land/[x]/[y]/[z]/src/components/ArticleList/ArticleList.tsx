@@ -20,6 +20,7 @@ import { makeGetQueryOptions } from "@/utils/react-query";
 import { cn } from "@/utils/tailwindcss";
 
 import { articleMapStore, useArticleMap } from "../../stores/articleMap";
+import { selectedLandStore } from "../../stores/selectedLand";
 import { useUser } from "../../stores/user";
 
 import { CylinderMap } from "./ArticleList.class";
@@ -89,18 +90,21 @@ function ArticleList({
     detail: { cylinder },
   }: CustomEvent<{ cylinder: Land }>) => {
     const { location } = cylinder;
-    const { x, z } = location;
-    console.log({ x, z });
 
-    // router.push(
-    //   `${window.location.pathname}${`?${qs.stringify({
-    //     ...qs.parse(queryString),
-    //   })}`}`,
-    //   undefined,
-    //   {
-    //     shallow: true,
-    //   },
-    // );
+    if (!articleMap) {
+      return;
+    }
+
+    const land = articleMap.checkCylinder(location);
+
+    if (!land) {
+      return;
+    }
+
+    selectedLandStore.updateSelectedLocation({
+      landType: land.landType,
+      location,
+    });
   };
 
   const onCameraMoveEnd = ({
@@ -225,7 +229,6 @@ function ArticleList({
     articleMap.updateState({
       cylinderList: locationList,
     });
-    // articleMap.drawCylinderList();
     articleMap.addEvents();
 
     return () => {
@@ -235,9 +238,9 @@ function ArticleList({
     $canvasRef.current,
     !!articleMap,
     locationListQuery.baseKey,
-    router.query.x,
-    router.query.z,
-    router.query.range,
+    x,
+    z,
+    range,
   ]);
 
   /** NOTE: articleMap event update */

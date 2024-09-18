@@ -5,7 +5,7 @@ import type {
   LandType,
 } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
-import { random } from "es-toolkit";
+import { random, round } from "es-toolkit";
 import * as THREE from "three";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -282,15 +282,12 @@ export class Land {
             color: lighter("#A5B78F", 30),
           });
 
-          const ARRAY = Array.from(
-            { length: Math.round(random(5, 10)) },
-            () => {
-              return {
-                radian: random(120, 420) * (Math.PI / 180),
-                radius: random(0.2, 0.75),
-              };
-            },
-          );
+          const ARRAY = Array.from({ length: round(random(5, 10)) }, () => {
+            return {
+              radian: random(120, 420) * (Math.PI / 180),
+              radius: random(0.2, 0.75),
+            };
+          });
 
           for (const { radian, radius } of ARRAY) {
             const grass = originGrass.clone();
