@@ -12,6 +12,8 @@
   },
   "aliases": {
     "components": "@/shad-cn/components",
-    "utils": "@/utils/tailwindcss"
+    "utils": "@/utils/tailwindcss",
+    "ui": "@/shad-cn/components/ui",
+    "magicui": "@/shad-cn/components/magicui"
   }
 }

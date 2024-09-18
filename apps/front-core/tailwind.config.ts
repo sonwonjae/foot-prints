@@ -5,9 +5,10 @@ import typography from "@tailwindcss/typography";
 import { fontFamily } from "tailwindcss/defaultTheme";
 import animate from "tailwindcss-animate";
 
-const config: Config = {
+const config = {
   darkMode: ["class"],
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -53,8 +54,8 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: `var(--radius)`,
-        md: `calc(var(--radius) - 2px)`,
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
@@ -78,5 +79,6 @@ const config: Config = {
   },
   plugins: [typography, animate],
   presets: [baseConfig],
-};
+} satisfies Config;
+
 export default config;
