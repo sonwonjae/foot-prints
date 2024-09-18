@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/shad-cn/components/ui/alert-dialog";
 import { makeGetQueryOptions } from "@/utils/react-query";
+import { cn } from "@/utils/tailwindcss";
 
 import { articleMapStore, useArticleMap } from "../../stores/articleMap";
 import { useUser } from "../../stores/user";
@@ -282,7 +283,11 @@ function ArticleList({
 
   return (
     <>
-      <canvas ref={$canvasRef} className="w-full h-full" {...props}></canvas>
+      <canvas
+        ref={$canvasRef}
+        className={cn("w-full", "h-full")}
+        {...props}
+      ></canvas>
       <AlertDialog open={isOpenUserFallEndModal}>
         <AlertDialogContent>
           <AlertDialogHeader>

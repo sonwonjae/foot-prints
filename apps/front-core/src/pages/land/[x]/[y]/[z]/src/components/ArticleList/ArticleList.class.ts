@@ -13,7 +13,6 @@ import {
   DefaultCylinderType,
   CylinderMapConstructorParam,
   UpdateCylinderMapParam,
-  UpdateCategoryMapParam,
   ArticleMap,
   CylinderLocation,
 } from "./ArticleList.type";
@@ -26,7 +25,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   /** NOTE: CylinderMap instance state */
   #store: CylinderMapStore<CylinderType> = {
     map: {},
-    categoryMap: {},
     cylinderList: [],
     animationMultiThread: [],
   };
@@ -74,7 +72,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     this.drawCylinderList = this.drawCylinderList.bind(this);
     this.checkCylinder = this.checkCylinder.bind(this);
     this.updateCylinderMap = this.updateCylinderMap.bind(this);
-    this.updateCategoryMap = this.updateCategoryMap.bind(this);
     this.animate = this.animate.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onCylinderEnter = this.onCylinderEnter.bind(this);
@@ -177,33 +174,6 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     if (!map[x][z]) {
       map[x][z] = { cylinder };
     }
-  }
-
-  /** NOTE: store에 존재하는 state 중 category map의 특정 category에 cylinder를 업데이트하는 메서드 */
-  updateCategoryMap({ cylinder }: UpdateCategoryMapParam) {
-    if (!cylinder?.category) {
-      return;
-    }
-    const { categoryMap } = this.#store;
-    const { category, location } = cylinder;
-    const { x, z } = location;
-    if (!categoryMap[category]) {
-      categoryMap[category] = [];
-    }
-    if (
-      categoryMap[category].find(
-        ({
-          cylinder: {
-            location: { x: ox, z: oz },
-          },
-        }) => {
-          return ox === x && oz === z;
-        },
-      )
-    ) {
-      return;
-    }
-    categoryMap[category].push({ cylinder });
   }
 
   animate() {

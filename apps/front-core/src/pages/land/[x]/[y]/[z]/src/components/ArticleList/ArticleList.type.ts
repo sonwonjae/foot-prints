@@ -40,12 +40,6 @@ export interface ArticleMap {
   };
 }
 
-export interface CategoryMap {
-  [category: string]: Array<{
-    cylinder: Land;
-  }>;
-}
-
 export type CylinderObject = THREE.Mesh<
   THREE.CylinderGeometry,
   THREE.MeshToonMaterial,
@@ -72,7 +66,6 @@ type AnimationTask = {
 
 export interface CylinderMapStore<CylinderType> {
   map: ArticleMap;
-  categoryMap: CategoryMap;
   cylinderList: Array<CylinderType>;
   animationMultiThread: Array<AnimationTask>;
 }
@@ -93,9 +86,5 @@ export interface CylinderMapConstructorParam<CylinderType> {
 }
 
 export interface UpdateCylinderMapParam {
-  cylinder: Land;
-}
-
-export interface UpdateCategoryMapParam {
   cylinder: Land;
 }
