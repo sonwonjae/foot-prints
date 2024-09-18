@@ -10,16 +10,12 @@ import { makeGetQueryOptions } from "@/utils/react-query";
 export const prefetch: Middleware<LandTypeXYZReq> = async (req) => {
   const x = Number(req.params?.x);
   const z = Number(req.params?.z);
-  const sx = Number(req.query?.sx);
-  const sz = Number(req.query?.sz);
   const range = Number(req.query?.range);
 
   const queryClient = new QueryClient();
 
   const queryString = `?${qs.stringify({
     range,
-    sx,
-    sz,
   })}`;
 
   const fx = x - (x % range);

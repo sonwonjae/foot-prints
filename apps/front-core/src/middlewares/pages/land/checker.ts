@@ -54,18 +54,6 @@ const checkLandQuery = pipe<Req>(
       25: true,
     },
   }),
-  /** NOTE: 선택한 location x query */
-  checkSingleQuery({
-    queryName: "sx",
-    validationType: "number",
-    defaultSingleQuery: 4,
-  }),
-  /** NOTE: 선택한 location z query */
-  checkSingleQuery({
-    queryName: "sz",
-    validationType: "number",
-    defaultSingleQuery: 3,
-  }),
 );
 
 export const checkLand = pipe<Req>(checkLandLocationType, checkLandQuery);

@@ -37,8 +37,6 @@ function ArticleList({
 
   const router = useRouter();
 
-  const sx = Number(router.query.sx);
-  const sz = Number(router.query.sz);
   const x = Number(router.query.x);
   const z = Number(router.query.z);
   const range = Number(router.query.range);
@@ -75,8 +73,6 @@ function ArticleList({
 
   const queryString = `?${qs.stringify({
     range,
-    sx,
-    sz,
   })}`;
 
   const fx = x - (x % range);
@@ -94,18 +90,17 @@ function ArticleList({
   }: CustomEvent<{ cylinder: Land }>) => {
     const { location } = cylinder;
     const { x, z } = location;
+    console.log({ x, z });
 
-    router.push(
-      `${window.location.pathname}${`?${qs.stringify({
-        ...qs.parse(queryString),
-        sx: x,
-        sz: z,
-      })}`}`,
-      undefined,
-      {
-        shallow: true,
-      },
-    );
+    // router.push(
+    //   `${window.location.pathname}${`?${qs.stringify({
+    //     ...qs.parse(queryString),
+    //   })}`}`,
+    //   undefined,
+    //   {
+    //     shallow: true,
+    //   },
+    // );
   };
 
   const onCameraMoveEnd = ({
@@ -243,8 +238,6 @@ function ArticleList({
     router.query.x,
     router.query.z,
     router.query.range,
-    router.query.sx,
-    router.query.sz,
   ]);
 
   /** NOTE: articleMap event update */
@@ -268,8 +261,6 @@ function ArticleList({
     !!articleMap,
     locationListQuery.baseKey,
     router.query.range,
-    router.query.sx,
-    router.query.sz,
   ]);
 
   /** NOTE: bind keyboard event */
