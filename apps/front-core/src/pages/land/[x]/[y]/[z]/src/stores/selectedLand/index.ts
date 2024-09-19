@@ -41,8 +41,6 @@ class SelectedLand extends Store<SelectedLandStoreState> {
   }) {
     this.#privateState.selectedLocation = location;
 
-    console.log({ landType, location });
-
     /** NOTE: 선택된 장소를 해제한 경우는 user location 기준으로 location 설정 */
     if (!this.#privateState.selectedLocation) {
       this.#state = {
@@ -80,8 +78,15 @@ class SelectedLand extends Store<SelectedLandStoreState> {
   }) {
     this.#privateState.userLocation = location;
 
-    /** NOTE: 선택된 장소가 있는 경우는 user location만 업데이트하고 마무리 */
+    /** NOTE: 선택된 장소가 있는 경우는 선택된 장소를 해제하고 user location으로 업데이트 */
     if (this.#privateState.selectedLocation) {
+      this.#privateState.selectedLocation = null;
+      this.#state = {
+        ...this.#state,
+        landType,
+        location: this.#privateState.userLocation,
+      };
+      this.emitChange();
       return;
     }
 

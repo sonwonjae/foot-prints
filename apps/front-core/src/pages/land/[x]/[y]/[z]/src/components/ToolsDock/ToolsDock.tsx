@@ -1,6 +1,7 @@
 import { cn } from "@/utils/tailwindcss";
 
 import { useArticleMap } from "../../stores/articleMap";
+import { useSelectedLand } from "../../stores/selectedLand";
 import { useUser } from "../../stores/user";
 
 import {
@@ -14,6 +15,7 @@ import {
 function ToolsDockComponent() {
   const { articleMap } = useArticleMap();
   const { user } = useUser();
+  const { landType } = useSelectedLand();
 
   if (!articleMap || !user) {
     /** FIXME: loading view 고안 필요 */
@@ -27,11 +29,11 @@ function ToolsDockComponent() {
 
   return (
     <div className={cn("absolute", "bottom-4", "left-0", "right-0")}>
-      <TimeCapsuleTool />
-      <GuestBookTool />
-      <WastelandTool />
-      <FenceTool />
-      <GrassTool />
+      {landType === "time-capsule" && <TimeCapsuleTool />}
+      {landType === "guest-book" && <GuestBookTool />}
+      {landType === "wasteland" && <WastelandTool />}
+      {landType === "fence" && <FenceTool />}
+      {landType === "grass" && <GrassTool />}
     </div>
   );
 }

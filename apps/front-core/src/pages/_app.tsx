@@ -26,7 +26,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
       <Component {...pageProps} />
       <Toaster
-        position="top-right"
+        position="top-left"
         icons={{
           success: <FootprintsIcon />,
         }}

@@ -77,7 +77,7 @@ function Tiptap({
     <>
       <EditorContent
         editor={editor}
-        className={cn("w-full", className)}
+        className={cn("w-full", "h-full", className)}
         tabIndex={0}
       />
       {/* {editor && (
