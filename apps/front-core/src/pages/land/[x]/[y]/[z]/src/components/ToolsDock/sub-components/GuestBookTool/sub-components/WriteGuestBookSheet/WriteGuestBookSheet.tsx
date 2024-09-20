@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotebookPenIcon } from "lucide-react";
 import { useId, useState } from "react";
 
@@ -5,7 +6,6 @@ import { Button } from "@/shad-cn/components/ui/button";
 import { Label } from "@/shad-cn/components/ui/label";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -19,16 +19,49 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shad-cn/components/ui/tooltip";
+import { apiAxios } from "@/utils/react-query";
 import { cn } from "@/utils/tailwindcss";
 
+import { useSelectedLand } from "../../../../../../stores/selectedLand";
+import { guestBookSheetStore, useGuestBookSheet } from "../../stores/sheet";
+
 function WriteGuestBookSheet() {
+  const queryClient = useQueryClient();
+  const { location } = useSelectedLand();
   const guestBookTextareaId = useId();
-  const [value, setValue] = useState("");
+  const { open } = useGuestBookSheet();
+  const [content, setContent] = useState("");
+
+  const { mutateAsync: createGuestBook, isPending: isGuestBookCreating } =
+    useMutation({
+      mutationFn: async ({ content }: { content: string }) => {
+        const { data } = await apiAxios.post(
+          `/api/guestbooks/${location.x}/${location.z}`,
+          {
+            content,
+          },
+        );
+
+        return data;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/guestbooks/list/${location.x}/${location.z}`],
+        });
+        setContent("");
+        guestBookSheetStore.toggleWithOpen("read");
+      },
+    });
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={100}>
       <Tooltip>
-        <Sheet>
+        <Sheet
+          open={open === "write"}
+          onOpenChange={() => {
+            guestBookSheetStore.toggleWithOpen("write");
+          }}
+        >
           <TooltipTrigger asChild>
             <SheetTrigger asChild>
               <Button
@@ -64,12 +97,13 @@ function WriteGuestBookSheet() {
               className={cn("flex-1", "flex", "w-full", "gap-1.5", "flex-col")}
             >
               <Textarea
+                disabled={isGuestBookCreating}
                 id={guestBookTextareaId}
                 placeholder="방명록을 남겨보세요."
                 maxLength={50}
-                value={value}
+                value={content}
                 onChange={(e) => {
-                  setValue(e.target.value);
+                  setContent(e.target.value);
                 }}
                 className={cn(
                   "flex-1",
@@ -82,14 +116,26 @@ function WriteGuestBookSheet() {
               <p
                 className={cn("text-sm", "text-muted-foreground", "text-right")}
               >
-                {value.length}/{50}
+                {content.length}/{50}
               </p>
             </div>
             <SheetFooter className={cn("sticky", "bottom-0")}>
-              <SheetClose asChild>
-                <Button variant="outline">닫기</Button>
-              </SheetClose>
-              <Button disabled={!value.length}>작성하기</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  guestBookSheetStore.toggleWithOpen("read");
+                }}
+              >
+                방명록 보기
+              </Button>
+              <Button
+                disabled={!content.length || isGuestBookCreating}
+                onClick={() => {
+                  createGuestBook({ content });
+                }}
+              >
+                작성하기
+              </Button>
             </SheetFooter>
           </SheetContent>
         </Sheet>

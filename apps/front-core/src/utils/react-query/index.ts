@@ -93,7 +93,3 @@ export const makeGetQueryOptions: MakeGetQueryOptions = <
     getQueryOptionsInServer,
   } as const;
 };
-
-export const makeGetMutationOptions = () => {
-  return () => {};
-};

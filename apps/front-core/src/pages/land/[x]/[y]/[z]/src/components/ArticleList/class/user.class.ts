@@ -67,12 +67,20 @@ interface UserMoveAnimationTask {
   progress: number;
   isKill?: boolean;
 }
+/** FIXME: 이 애니메이션이 여기 있어야되는지는 고민 필요 */
+interface LandTypeEffectAnimationTask {
+  type: "land-effect";
+  duration: number;
+  progress: number;
+  isKill?: boolean;
+}
 
 type AnimationTask =
   | UserCreateAnimationTask
   | UserFallAnimationTask
   | UserVibrateAnimationTask
-  | UserMoveAnimationTask;
+  | UserMoveAnimationTask
+  | LandTypeEffectAnimationTask;
 
 /** NOTE: 떠있는 높이 height */
 const FLOAT_HEIGHT = 10;

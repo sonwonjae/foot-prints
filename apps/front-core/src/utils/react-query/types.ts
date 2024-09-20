@@ -24,29 +24,19 @@ interface Custom<Url, TQueryFnData> {
   };
 }
 
-/** NOTE: article 정보 가져오는 쿼리 */
+/** FIXME: back 로직이랑 타입 싱크 맞추기 */
+
+/** NOTE: guestbook list 정보 가져오는 쿼리 */
 export interface MakeGetQueryOptions
-  /** FIXME: back 로직이랑 타입 싱크 맞추기 */
   extends Custom<
-    `/api/foot-prints/article/${number}/${number}`,
-    {
+    `/api/guestbooks/list/${number}/${number}`,
+    Array<{
+      id: string;
       content: string;
       createdAt: string;
-      description: string;
-      id: string;
-      isPublic: boolean;
-      title: string;
       updatedAt: string;
-    }
+    }>
   > {}
-
-// /** NOTE: location 정보 가져오는 쿼리 */
-// export interface MakeGetQueryOptions
-//   /** FIXME: back 로직이랑 타입 싱크 맞추기 */
-//   extends Custom<
-//     `/api/locations/${number}/${number}`,
-//     { type: "empty" | "mine-location" | "other-user-location" }
-//   > {}
 
 /** NOTE: location list 정보 가져오는 쿼리 */
 export interface MakeGetQueryOptions

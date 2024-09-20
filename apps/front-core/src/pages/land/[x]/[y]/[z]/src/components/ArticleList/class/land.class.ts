@@ -395,18 +395,21 @@ export class Land {
           const leaveBunch2 = children[2];
 
           if (treeTrunk?.material) {
+            treeTrunk.castShadow = true;
             treeTrunk.material = new THREE.MeshToonMaterial({
               color: darker("#CFB9A2", -20),
             });
           }
 
           if (leaveBunch1?.material) {
+            leaveBunch1.castShadow = true;
             leaveBunch1.material = new THREE.MeshToonMaterial({
               color: lighter("#A5B78F", 30),
             });
           }
 
           if (leaveBunch2?.material) {
+            leaveBunch2.castShadow = true;
             leaveBunch2.material = new THREE.MeshToonMaterial({
               color: lighter("#A5B78F", 30),
             });
@@ -414,6 +417,7 @@ export class Land {
 
           tree.position.y = object.geometry.parameters.height;
           tree.scale.set(0.55, 0.55, 0.55);
+          tree.rotation.set(0, Math.PI * 2 * (12 / 360), 0);
           object.add(tree);
         },
         undefined,
@@ -421,6 +425,99 @@ export class Land {
           console.error(error);
         },
       );
+
+      /** NOTE: postbox */
+      fbxLoader.load(`/postbox/1.fbx`, (fbx) => {
+        const postboxGroup = fbx.children[0] as THREE.Group;
+
+        const postboxBody = postboxGroup.children[0] as THREE.Mesh | undefined;
+        const postboxStickParts1 = postboxGroup.children[1] as
+          | THREE.Mesh
+          | undefined;
+        const postboxHandleParts1 = postboxGroup.children[2] as
+          | THREE.Mesh
+          | undefined;
+        const postboxHinges = postboxGroup.children[3] as
+          | THREE.Mesh
+          | undefined;
+        const postboxCover = postboxGroup.children[4] as THREE.Mesh | undefined;
+        const postboxStickParts2 = postboxGroup.children[5] as
+          | THREE.Mesh
+          | undefined;
+        const postboxStickParts3 = postboxGroup.children[6] as
+          | THREE.Mesh
+          | undefined;
+        const postboxHandle = postboxGroup.children[7] as
+          | THREE.Mesh
+          | undefined;
+        const postboxStickHinges = postboxGroup.children[8] as
+          | THREE.Mesh
+          | undefined;
+
+        if (
+          !postboxBody ||
+          !postboxStickParts1 ||
+          !postboxHandleParts1 ||
+          !postboxHinges ||
+          !postboxCover ||
+          !postboxStickParts2 ||
+          !postboxStickParts3 ||
+          !postboxHandle ||
+          !postboxStickHinges
+        ) {
+          return;
+        }
+
+        const postboxWhite = darker("#FFFFFF", -25);
+        const postboxRed = darker("#FF6347", -10);
+        const tree = darker("#CFB9A2", -20);
+        const silver = darker("#FFFFFF", -40);
+
+        postboxBody.material = new THREE.MeshToonMaterial({
+          color: postboxRed,
+        });
+        postboxBody.castShadow = true;
+
+        postboxStickParts1.material = new THREE.MeshToonMaterial({
+          color: tree,
+        });
+        postboxStickParts1.castShadow = true;
+        postboxStickParts1.scale.set(1, 1.25, 1);
+
+        postboxHandleParts1.material = new THREE.MeshToonMaterial({
+          color: silver,
+        });
+
+        postboxHinges.material = new THREE.MeshToonMaterial({
+          color: silver,
+        });
+
+        postboxCover.material = new THREE.MeshToonMaterial({
+          color: postboxRed,
+        });
+        postboxCover.castShadow = true;
+
+        postboxStickParts2.material = new THREE.MeshToonMaterial({
+          color: tree,
+        });
+
+        postboxStickParts3.material = new THREE.MeshToonMaterial({
+          color: tree,
+        });
+
+        postboxHandle.material = new THREE.MeshToonMaterial({
+          color: postboxWhite,
+        });
+
+        postboxStickHinges.material = new THREE.MeshToonMaterial({
+          color: silver,
+        });
+
+        postboxGroup.castShadow = true;
+        postboxGroup.position.y = object.geometry.parameters.height + 1.1;
+        postboxGroup.scale.set(0.075, 0.075, 0.075);
+        object.add(postboxGroup);
+      });
     }
 
     /** NOTE: 등장 애니메이션 push */
