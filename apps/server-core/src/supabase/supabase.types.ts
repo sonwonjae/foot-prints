@@ -44,6 +44,63 @@ export type Database = {
           },
         ];
       };
+      guestbooks: {
+        Row: {
+          content: string;
+          createdAt: string;
+          id: string;
+          updatedAt: string;
+        };
+        Insert: {
+          content?: string;
+          createdAt?: string;
+          id?: string;
+          updatedAt?: string;
+        };
+        Update: {
+          content?: string;
+          createdAt?: string;
+          id?: string;
+          updatedAt?: string;
+        };
+        Relationships: [];
+      };
+      guestbooks__locations: {
+        Row: {
+          createdAt: string;
+          guestbookId: string;
+          id: string;
+          locationId: string;
+        };
+        Insert: {
+          createdAt?: string;
+          guestbookId: string;
+          id?: string;
+          locationId: string;
+        };
+        Update: {
+          createdAt?: string;
+          guestbookId?: string;
+          id?: string;
+          locationId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'guestbooks__locations_guestbookId_fkey';
+            columns: ['guestbookId'];
+            isOneToOne: false;
+            referencedRelation: 'guestbooks';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'guestbooks__locations_locationId_fkey';
+            columns: ['locationId'];
+            isOneToOne: false;
+            referencedRelation: 'locations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       locations: {
         Row: {
           createdAt: string;
@@ -73,63 +130,6 @@ export type Database = {
           z?: number;
         };
         Relationships: [];
-      };
-      notes: {
-        Row: {
-          content: string;
-          createdAt: string;
-          id: string;
-          updatedAt: string;
-        };
-        Insert: {
-          content?: string;
-          createdAt?: string;
-          id?: string;
-          updatedAt?: string;
-        };
-        Update: {
-          content?: string;
-          createdAt?: string;
-          id?: string;
-          updatedAt?: string;
-        };
-        Relationships: [];
-      };
-      notes__locations: {
-        Row: {
-          createdAt: string;
-          id: string;
-          locationId: string;
-          noteId: string;
-        };
-        Insert: {
-          createdAt?: string;
-          id?: string;
-          locationId: string;
-          noteId: string;
-        };
-        Update: {
-          createdAt?: string;
-          id?: string;
-          locationId?: string;
-          noteId?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'notes__locations_locationId_fkey';
-            columns: ['locationId'];
-            isOneToOne: false;
-            referencedRelation: 'locations';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'notes__locations_noteId_fkey';
-            columns: ['noteId'];
-            isOneToOne: false;
-            referencedRelation: 'notes';
-            referencedColumns: ['id'];
-          },
-        ];
       };
       users: {
         Row: {
@@ -164,35 +164,35 @@ export type Database = {
         };
         Relationships: [];
       };
-      users__notes: {
+      users__guestbooks: {
         Row: {
           created_at: string;
+          guestbookId: string;
           id: number;
-          noteId: string;
           userId: string;
         };
         Insert: {
           created_at?: string;
+          guestbookId?: string;
           id?: number;
-          noteId?: string;
           userId?: string;
         };
         Update: {
           created_at?: string;
+          guestbookId?: string;
           id?: number;
-          noteId?: string;
           userId?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'users_notes_noteId_fkey';
-            columns: ['noteId'];
+            foreignKeyName: 'users__guestbooks_guestbookId_fkey';
+            columns: ['guestbookId'];
             isOneToOne: false;
-            referencedRelation: 'notes';
+            referencedRelation: 'guestbooks';
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'users_notes_userId_fkey';
+            foreignKeyName: 'users_guestbooks_userId_fkey';
             columns: ['userId'];
             isOneToOne: false;
             referencedRelation: 'users';
