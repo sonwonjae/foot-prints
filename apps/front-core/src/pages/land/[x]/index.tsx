@@ -1,4 +1,4 @@
-import { middleware } from "./src/middleware";
+import { middleware } from "@/pages-src/land/[x]/src/middleware";
 
 export const getServerSideProps = middleware;
 

@@ -1,6 +1,6 @@
 import { round } from "es-toolkit";
 
-import { CylinderLocation } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
+import { CylinderLocation } from "@/pages-src/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
 interface LocationFunctionParam extends CylinderLocation {
   magnification?: number;

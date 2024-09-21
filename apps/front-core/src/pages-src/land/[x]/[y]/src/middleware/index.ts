@@ -1,4 +1,4 @@
-import type { LandTypeXYReq } from "@/pages/land/[x]/[y]/src/types/page.types";
+import type { LandTypeXYReq } from "@/pages-src/land/[x]/[y]/src/types/page.types";
 import type { ServerResponse } from "http";
 
 import { createRouter } from "next-connect";

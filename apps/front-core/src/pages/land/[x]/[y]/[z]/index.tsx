@@ -1,10 +1,12 @@
 import { HydrationBoundary } from "@tanstack/react-query";
 
+import {
+  ArticleList,
+  ToolsDock,
+} from "@/pages-src/land/[x]/[y]/[z]/src/components";
+import { middleware } from "@/pages-src/land/[x]/[y]/[z]/src/middleware";
+import { LandTypeXYZPageProps } from "@/pages-src/land/[x]/[y]/[z]/src/types/page.types";
 import { cn } from "@/utils/tailwindcss";
-
-import { ArticleList, ToolsDock } from "./src/components";
-import { middleware } from "./src/middleware";
-import { LandTypeXYZPageProps } from "./src/types/page.types";
 
 export const getServerSideProps = middleware;
 

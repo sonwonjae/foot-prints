@@ -3,7 +3,7 @@ import type {
   CylinderObject,
   CylinderLocation,
   LandType,
-} from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
+} from "@/pages-src/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
 import { random, round } from "es-toolkit";
 import * as THREE from "three";
@@ -13,7 +13,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
   easeInCubic,
   easeOutCubic,
-} from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.utils";
+} from "@/pages-src/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.utils";
 import { darker, lighter } from "@/three/utils/color";
 import {
   DEFAULT_MAGNIFICATION,

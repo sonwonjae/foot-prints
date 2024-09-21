@@ -1,7 +1,4 @@
-import type {
-  LandTypeXYZPageProps,
-  LandTypeXYZReq,
-} from "@/pages/land/[x]/[y]/[z]/src/types/page.types";
+import type { LandTypeXReq } from "@/pages-src/land/[x]/src/types/page.types";
 import type { ServerResponse } from "http";
 
 import { createRouter } from "next-connect";
@@ -10,10 +7,8 @@ import { makeGetServerSideProps } from "@/middlewares/pages/common/makeGetServer
 import { checkLand } from "@/middlewares/pages/land/checker";
 import { pipe } from "@/middlewares/pages/utils/pipe";
 
-import { prefetch } from "./prefetch";
+const router = createRouter<LandTypeXReq, ServerResponse>();
 
-const router = createRouter<LandTypeXYZReq, ServerResponse>();
-
-router.get(pipe<LandTypeXYZReq, LandTypeXYZPageProps>(checkLand, prefetch));
+router.get(pipe<LandTypeXReq>(checkLand));
 
 export const middleware = makeGetServerSideProps(router);

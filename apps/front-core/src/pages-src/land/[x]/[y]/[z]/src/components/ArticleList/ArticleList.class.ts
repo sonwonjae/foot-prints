@@ -186,10 +186,10 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
 
     if (!map[x]) {
       map[x] = {};
+    }
 
-      if (!map[x]![z]) {
-        map[x]![z] = { cylinder };
-      }
+    if (!map[x]?.[z]) {
+      map[x]![z] = { cylinder };
     }
   }
 

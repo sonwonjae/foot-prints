@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   ArticleMap,
   CylinderLocation,
-} from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
+} from "@/pages-src/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 import { darker } from "@/three/utils/color";
 import { locationToCameraPosition } from "@/three/utils/location";
 

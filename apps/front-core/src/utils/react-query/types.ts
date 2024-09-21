@@ -1,7 +1,7 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
 import type { AxiosError, AxiosRequestConfig, Method } from "axios";
 
-import { Article } from "@/pages/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
+import { Article } from "@/pages-src/land/[x]/[y]/[z]/src/components/ArticleList/ArticleList.type";
 
 export type QueryUrl = `/api/${string}`;
 
