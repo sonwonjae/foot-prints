@@ -174,10 +174,16 @@ function ArticleList({
 
     switch (key) {
       case "ARROWUP":
-        throttleMoveLocation({ nx: x - Number(!!(z % 2)), nz: z - 1 });
+        throttleMoveLocation({
+          nx: x - Number(z <= 0 ? !(z % 2) : !!(z % 2)),
+          nz: z - 1,
+        });
         break;
       case "ARROWDOWN":
-        throttleMoveLocation({ nx: x + Number(!(z % 2)), nz: z + 1 });
+        throttleMoveLocation({
+          nx: x + Number(z <= 0 ? !!(z % 2) : !(z % 2)),
+          nz: z + 1,
+        });
         break;
       case "ARROWLEFT":
         throttleMoveLocation({ nx: x - 1, nz: z });
@@ -302,7 +308,7 @@ function ArticleList({
                    * 이동할 땅이 없으면 어차피 모두 리셋해야되기 때문에
                    * router 사용하지 않고 깔끔하게 { x: 0, z: 0 } 좌표로 페이지 이동
                    */
-                  window.location.replace(`/land/${4}/0/${3}${queryString}`);
+                  window.location.replace(`/land/${0}/0/${0}${queryString}`);
                   return;
                 }
 

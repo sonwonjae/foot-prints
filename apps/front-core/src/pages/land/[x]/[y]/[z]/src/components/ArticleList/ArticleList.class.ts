@@ -156,11 +156,23 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
   checkCylinder({ x, z }: CylinderLocation) {
     const { map } = this.#store;
 
-    if (!map[x]?.[z]?.cylinder) {
+    if (!map) {
       return false;
     }
 
-    return map[x][z].cylinder;
+    if (!map[x]) {
+      return false;
+    }
+
+    if (!map[x]?.[z]) {
+      return false;
+    }
+
+    if (!map?.[x]?.[z]?.cylinder) {
+      return false;
+    }
+
+    return map?.[x]?.[z]?.cylinder;
   }
 
   /** NOTE: store에 존재하는 state 중 map의 특정 좌표에 cylinder를 업데이트하는 메서드 */
@@ -168,11 +180,16 @@ export class CylinderMap<CylinderType extends DefaultCylinderType> {
     const { map } = this.#store;
     const { x, z } = cylinder.location;
 
+    if (!map) {
+      throw new Error("아직 map이 생성되지 않았습니다.");
+    }
+
     if (!map[x]) {
       map[x] = {};
-    }
-    if (!map[x][z]) {
-      map[x][z] = { cylinder };
+
+      if (!map[x]![z]) {
+        map[x]![z] = { cylinder };
+      }
     }
   }
 

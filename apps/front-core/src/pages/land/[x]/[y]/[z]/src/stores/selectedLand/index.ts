@@ -22,7 +22,7 @@ class SelectedLand extends Store<SelectedLandStoreState> {
     userLocation: CylinderLocation;
     selectedLocation: CylinderLocation | null;
   } = {
-    userLocation: { x: 4, z: 3 },
+    userLocation: { x: 0, z: 0 },
     selectedLocation: null,
   };
 

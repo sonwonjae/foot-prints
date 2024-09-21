@@ -101,7 +101,6 @@ function ReadCheerPostboxSheet() {
                         value={id}
                         key={id}
                         className={cn(
-                          "text-sm",
                           "relative",
                           "mx-auto",
                           "min-h-fit",
@@ -142,7 +141,9 @@ function ReadCheerPostboxSheet() {
                               "gap-4",
                             )}
                           >
-                            <div>{replaceEnterToBr(content)}</div>
+                            <div className={cn("text-xs")}>
+                              {replaceEnterToBr(content)}
+                            </div>
                             <Separator />
                             <ReadCheerMailReplyList cheerMailId={id} />
                           </div>

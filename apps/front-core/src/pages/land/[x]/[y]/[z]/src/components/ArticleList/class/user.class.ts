@@ -182,10 +182,10 @@ export class User {
     const by = this.#map[x]?.[z]?.cylinder.height ?? FLOAT_HEIGHT;
 
     this.object.castShadow = true;
+    const cylinder = this.#map[x]?.[z]?.cylinder;
 
-    if (this.#map[x]?.[z]?.cylinder) {
+    if (cylinder) {
       /** FIXME: 공통화 필요 */
-      const cylinder = this.#map[x]?.[z]?.cylinder;
       const angleInRadians = 90 * (Math.PI / 180);
 
       const lx =

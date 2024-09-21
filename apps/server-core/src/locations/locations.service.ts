@@ -15,13 +15,7 @@ export class LocationsService {
   ) {
     const supabase = this.supabaseService.getClient();
 
-    const { data: locations } = await supabase
-      .from('locations')
-      .select(`*`)
-      .gte('x', x - 1)
-      .lte('x', x + Math.floor(range))
-      .gte('z', z - 1)
-      .lte('z', z + Math.floor(range));
+    const { data: locations } = await supabase.from('locations').select(`*`);
 
     return (locations || []).map(({ landType, variation, x, z }) => {
       return { landType, variation, location: { x, z } };

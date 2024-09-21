@@ -31,7 +31,7 @@ const checkLandLocationType: Middleware<Req> = async (req) => {
   if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
     return {
       redirect: {
-        destination: "/land/4/0/3",
+        destination: "/land/0/0/0",
         permanent: false,
       },
     };
