@@ -5,7 +5,7 @@ import { useSelectedLand } from "../../stores/selectedLand";
 import { useUser } from "../../stores/user";
 
 import {
-  TimeCapsuleTool,
+  CheerPostboxTool,
   GuestBookTool,
   WastelandTool,
   FenceTool,
@@ -29,7 +29,7 @@ function ToolsDockComponent() {
 
   return (
     <div className={cn("absolute", "bottom-4", "left-0", "right-0")}>
-      {landType === "time-capsule" && <TimeCapsuleTool />}
+      {landType === "cheer-postbox" && <CheerPostboxTool />}
       {landType === "guest-book" && <GuestBookTool />}
       {landType === "wasteland" && <WastelandTool />}
       {landType === "fence" && <FenceTool />}

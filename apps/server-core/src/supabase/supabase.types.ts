@@ -44,6 +44,123 @@ export type Database = {
           },
         ];
       };
+      cheer_mails: {
+        Row: {
+          content: string;
+          createdAt: string;
+          id: string;
+          title: string;
+          updatedAt: string;
+        };
+        Insert: {
+          content?: string;
+          createdAt?: string;
+          id?: string;
+          title?: string;
+          updatedAt?: string;
+        };
+        Update: {
+          content?: string;
+          createdAt?: string;
+          id?: string;
+          title?: string;
+          updatedAt?: string;
+        };
+        Relationships: [];
+      };
+      cheer_mails__cheer_mails_replies: {
+        Row: {
+          cheerMailId: string;
+          cheerMailReplyId: string;
+          createdAt: string;
+          id: string;
+        };
+        Insert: {
+          cheerMailId: string;
+          cheerMailReplyId: string;
+          createdAt?: string;
+          id?: string;
+        };
+        Update: {
+          cheerMailId?: string;
+          cheerMailReplyId?: string;
+          createdAt?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'cheer_mails__cheer_mails_replies_cheerMailId_fkey';
+            columns: ['cheerMailId'];
+            isOneToOne: false;
+            referencedRelation: 'cheer_mails';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'cheer_mails__cheer_mails_replies_cheerMailReplyId_fkey';
+            columns: ['cheerMailReplyId'];
+            isOneToOne: false;
+            referencedRelation: 'cheer_mails_replies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      cheer_mails__locations: {
+        Row: {
+          cheerMailId: string;
+          createdAt: string;
+          id: string;
+          locationId: string;
+        };
+        Insert: {
+          cheerMailId: string;
+          createdAt?: string;
+          id?: string;
+          locationId: string;
+        };
+        Update: {
+          cheerMailId?: string;
+          createdAt?: string;
+          id?: string;
+          locationId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'cheer_mails__locations_cheerMailId_fkey';
+            columns: ['cheerMailId'];
+            isOneToOne: false;
+            referencedRelation: 'cheer_mails';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'cheer_mails__locations_locationId_fkey';
+            columns: ['locationId'];
+            isOneToOne: false;
+            referencedRelation: 'locations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      cheer_mails_replies: {
+        Row: {
+          content: string;
+          createdAt: string;
+          id: string;
+          updatedAt: string;
+        };
+        Insert: {
+          content?: string;
+          createdAt?: string;
+          id?: string;
+          updatedAt?: string;
+        };
+        Update: {
+          content?: string;
+          createdAt?: string;
+          id?: string;
+          updatedAt?: string;
+        };
+        Relationships: [];
+      };
       guestbooks: {
         Row: {
           content: string;
@@ -93,7 +210,7 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'guestbooks__locations_locationId_fkey';
+            foreignKeyName: 'notes__locations_locationId_fkey';
             columns: ['locationId'];
             isOneToOne: false;
             referencedRelation: 'locations';
@@ -164,21 +281,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      users__cheer_mails_replies: {
+        Row: {
+          cheerMailReplyId: string;
+          createdAt: string;
+          id: string;
+          userId: string;
+        };
+        Insert: {
+          cheerMailReplyId: string;
+          createdAt?: string;
+          id?: string;
+          userId: string;
+        };
+        Update: {
+          cheerMailReplyId?: string;
+          createdAt?: string;
+          id?: string;
+          userId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'users__cheer_mails_replies_cheerMailReplyId_fkey';
+            columns: ['cheerMailReplyId'];
+            isOneToOne: false;
+            referencedRelation: 'cheer_mails_replies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'users__cheer_mails_replies_userId_fkey';
+            columns: ['userId'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       users__guestbooks: {
         Row: {
-          created_at: string;
+          createdAt: string;
           guestbookId: string;
           id: number;
           userId: string;
         };
         Insert: {
-          created_at?: string;
+          createdAt?: string;
           guestbookId?: string;
           id?: number;
           userId?: string;
         };
         Update: {
-          created_at?: string;
+          createdAt?: string;
           guestbookId?: string;
           id?: number;
           userId?: string;
@@ -192,7 +345,43 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'users_guestbooks_userId_fkey';
+            foreignKeyName: 'users_notes_userId_fkey';
+            columns: ['userId'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      users_cheer_mails: {
+        Row: {
+          cheerMailId: string;
+          createdAt: string;
+          id: string;
+          userId: string;
+        };
+        Insert: {
+          cheerMailId: string;
+          createdAt?: string;
+          id?: string;
+          userId: string;
+        };
+        Update: {
+          cheerMailId?: string;
+          createdAt?: string;
+          id?: string;
+          userId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'users_cheer_mails_cheerMailId_fkey';
+            columns: ['cheerMailId'];
+            isOneToOne: false;
+            referencedRelation: 'cheer_mails';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'users_cheer_mails_userId_fkey';
             columns: ['userId'];
             isOneToOne: false;
             referencedRelation: 'users';
@@ -209,7 +398,7 @@ export type Database = {
     };
     Enums: {
       landType:
-        | 'time-capsule'
+        | 'cheer-postbox'
         | 'guest-book'
         | 'wasteland'
         | 'fence'

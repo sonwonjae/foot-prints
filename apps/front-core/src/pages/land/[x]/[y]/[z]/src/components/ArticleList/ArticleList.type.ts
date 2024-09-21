@@ -15,7 +15,7 @@ declare global {
 export type Cateogry = Nullable<string>;
 
 export type LandType =
-  | "time-capsule"
+  | "cheer-postbox"
   | "guest-book"
   | "wasteland"
   | "fence"

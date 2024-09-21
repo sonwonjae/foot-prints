@@ -67,6 +67,8 @@ function ReadGuestBookSheet() {
               "right-4",
               "flex",
               "flex-col",
+              "max-sm:left-4",
+              "max-sm:w-auto",
             )}
           >
             <SheetHeader>
@@ -111,7 +113,7 @@ function ReadGuestBookSheet() {
               </AnimatedList>
             </ScrollArea>
 
-            <SheetFooter className={cn("sticky", "bottom-0")}>
+            <SheetFooter className={cn("sticky", "bottom-0", "max-sm:gap-2")}>
               <Button
                 onClick={() => {
                   guestBookSheetStore.toggleWithOpen("write");

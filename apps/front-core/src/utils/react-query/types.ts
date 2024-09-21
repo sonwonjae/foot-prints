@@ -26,6 +26,30 @@ interface Custom<Url, TQueryFnData> {
 
 /** FIXME: back 로직이랑 타입 싱크 맞추기 */
 
+/** NOTE: cheer postbox list 정보 가져오는 쿼리 */
+export interface MakeGetQueryOptions
+  extends Custom<
+    `/api/cheer-mails/list/${number}/${number}`,
+    Array<{
+      id: string;
+      title: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > {}
+
+export interface MakeGetQueryOptions
+  extends Custom<
+    `/api/cheer-mails-replies/list/${string}`,
+    Array<{
+      id: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > {}
+
 /** NOTE: guestbook list 정보 가져오는 쿼리 */
 export interface MakeGetQueryOptions
   extends Custom<

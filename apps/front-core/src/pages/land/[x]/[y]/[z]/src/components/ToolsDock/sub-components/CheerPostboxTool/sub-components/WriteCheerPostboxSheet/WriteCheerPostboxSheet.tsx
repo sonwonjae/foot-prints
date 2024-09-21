@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { NotebookPenIcon } from "lucide-react";
+import { MailPlusIcon } from "lucide-react";
 import { useId, useState } from "react";
 
 import { Button } from "@/shad-cn/components/ui/button";
+import { Input } from "@/shad-cn/components/ui/input";
 import { Label } from "@/shad-cn/components/ui/label";
 import {
   Sheet,
@@ -23,21 +24,27 @@ import { apiAxios } from "@/utils/react-query";
 import { cn } from "@/utils/tailwindcss";
 
 import { useSelectedLand } from "../../../../../../stores/selectedLand";
-import { guestBookSheetStore, useGuestBookSheet } from "../../stores/sheet";
+import {
+  cheerPostboxSheetStore,
+  useCheerPostboxSheet,
+} from "../../stores/sheet";
 
-function WriteGuestBookSheet() {
+function WriteCheerPostboxSheet() {
   const queryClient = useQueryClient();
   const { location } = useSelectedLand();
-  const guestBookTextareaId = useId();
-  const { open } = useGuestBookSheet();
+  const cheerMailTitleInputId = useId();
+  const cheerMailContentTextareaId = useId();
+  const { open } = useCheerPostboxSheet();
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  const { mutateAsync: createGuestBook, isPending: isGuestBookCreating } =
+  const { mutateAsync: createCheerMail, isPending: isCheerMailCreating } =
     useMutation({
       mutationFn: async ({ content }: { content: string }) => {
         const { data } = await apiAxios.post(
-          `/api/guestbooks/${location.x}/${location.z}`,
+          `/api/cheer-mails/${location.x}/${location.z}`,
           {
+            title,
             content,
           },
         );
@@ -46,10 +53,11 @@ function WriteGuestBookSheet() {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: [`/api/guestbooks/list/${location.x}/${location.z}`],
+          queryKey: [`/api/cheer-mails/list/${location.x}/${location.z}`],
         });
+        setTitle("");
         setContent("");
-        guestBookSheetStore.toggleWithOpen("read");
+        cheerPostboxSheetStore.toggleWithOpen("read");
       },
     });
 
@@ -59,7 +67,7 @@ function WriteGuestBookSheet() {
         <Sheet
           open={open === "write"}
           onOpenChange={() => {
-            guestBookSheetStore.toggleWithOpen("write");
+            cheerPostboxSheetStore.toggleWithOpen("write");
           }}
         >
           <TooltipTrigger asChild>
@@ -69,12 +77,12 @@ function WriteGuestBookSheet() {
                 size="icon"
                 className={cn("size-12", "rounded-full")}
               >
-                <NotebookPenIcon />
+                <MailPlusIcon />
               </Button>
             </SheetTrigger>
           </TooltipTrigger>
 
-          <TooltipContent>방명록 남기기</TooltipContent>
+          <TooltipContent>사연 남기기</TooltipContent>
 
           <SheetContent
             className={cn(
@@ -90,19 +98,30 @@ function WriteGuestBookSheet() {
             )}
           >
             <SheetHeader>
-              <SheetTitle>
-                <Label htmlFor={guestBookTextareaId}>방명록 남기기</Label>
-              </SheetTitle>
+              <SheetTitle>사연 남기기</SheetTitle>
             </SheetHeader>
-
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor={cheerMailTitleInputId}>제목</Label>
+              <Input
+                id={cheerMailTitleInputId}
+                type="text"
+                placeholder="제목을 작성해주세요."
+                disabled={isCheerMailCreating}
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                }}
+              />
+            </div>
             <div
               className={cn("flex-1", "flex", "w-full", "gap-1.5", "flex-col")}
             >
+              <Label htmlFor={cheerMailContentTextareaId}>사연</Label>
               <Textarea
-                disabled={isGuestBookCreating}
-                id={guestBookTextareaId}
-                placeholder="방명록을 남겨보세요."
-                maxLength={50}
+                disabled={isCheerMailCreating}
+                id={cheerMailContentTextareaId}
+                placeholder="사연을 남겨보세요."
+                maxLength={500}
                 value={content}
                 onChange={(e) => {
                   setContent(e.target.value);
@@ -112,22 +131,24 @@ function WriteGuestBookSheet() {
               <p
                 className={cn("text-sm", "text-muted-foreground", "text-right")}
               >
-                {content.length}/{50}
+                {content.length}/{500}
               </p>
             </div>
             <SheetFooter className={cn("sticky", "bottom-0", "max-sm:gap-2")}>
               <Button
                 variant="outline"
                 onClick={() => {
-                  guestBookSheetStore.toggleWithOpen("read");
+                  cheerPostboxSheetStore.toggleWithOpen("read");
                 }}
               >
-                방명록 보기
+                응원의 우체통 둘러보기
               </Button>
               <Button
-                disabled={!content.length || isGuestBookCreating}
+                disabled={
+                  !title.length || !content.length || isCheerMailCreating
+                }
                 onClick={() => {
-                  createGuestBook({ content });
+                  createCheerMail({ content });
                 }}
               >
                 작성하기
@@ -140,4 +161,4 @@ function WriteGuestBookSheet() {
   );
 }
 
-export default WriteGuestBookSheet;
+export default WriteCheerPostboxSheet;

@@ -143,7 +143,7 @@ export class Land {
     this.height = 0.6;
     this.color = (() => {
       switch (this.landType) {
-        case "time-capsule":
+        case "cheer-postbox":
         case "grass":
           return lighter("#A5B78F", 50);
         case "wasteland":
@@ -328,7 +328,7 @@ export class Land {
       });
     }
 
-    if (this.landType === "time-capsule") {
+    if (this.landType === "cheer-postbox") {
       /** NOTE: 수풀 */
       for (let variation = 1; variation <= 7; variation += 1) {
         fbxLoader.load(`/grass/${variation}.fbx`, (fbx) => {
@@ -376,17 +376,6 @@ export class Land {
           // 각도를 라디안으로 변환
           const angleInRadians = -60 * (Math.PI / 180);
 
-          tree.castShadow = true;
-          tree.position.x =
-            object.geometry.parameters.radiusTop *
-            0.5 *
-            Math.cos(angleInRadians);
-          tree.position.y = object.geometry.parameters.height;
-          tree.position.z =
-            object.geometry.parameters.radiusTop *
-            0.5 *
-            Math.sin(angleInRadians);
-
           const children =
             (tree.children[0]?.children as Array<THREE.Mesh>) || [];
 
@@ -415,7 +404,17 @@ export class Land {
             });
           }
 
+          tree.castShadow = true;
+          tree.position.x =
+            object.geometry.parameters.radiusTop *
+            0.5 *
+            Math.cos(angleInRadians);
           tree.position.y = object.geometry.parameters.height;
+          tree.position.z =
+            object.geometry.parameters.radiusTop *
+            0.5 *
+            Math.sin(angleInRadians);
+
           tree.scale.set(0.55, 0.55, 0.55);
           tree.rotation.set(0, Math.PI * 2 * (12 / 360), 0);
           object.add(tree);
@@ -514,8 +513,8 @@ export class Land {
         });
 
         postboxGroup.castShadow = true;
-        postboxGroup.position.y = object.geometry.parameters.height + 1.1;
-        postboxGroup.scale.set(0.075, 0.075, 0.075);
+        postboxGroup.position.y = object.geometry.parameters.height + 1.3;
+        postboxGroup.scale.set(0.08, 0.08, 0.08);
         object.add(postboxGroup);
       });
     }
