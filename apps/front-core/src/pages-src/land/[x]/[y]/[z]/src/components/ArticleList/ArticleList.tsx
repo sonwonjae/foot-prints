@@ -181,7 +181,7 @@ function ArticleList({
         break;
       case "ARROWDOWN":
         throttleMoveLocation({
-          nx: x + Number(z <= 0 ? !!(z % 2) : !(z % 2)),
+          nx: x + Number(z < 0 ? !!(z % 2) : !(z % 2)),
           nz: z + 1,
         });
         break;
